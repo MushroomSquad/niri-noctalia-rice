@@ -24,10 +24,15 @@ git clone <repo> && cd niri-noctalia-rice
 | `wallpapers/` | обои (по умолчанию `wallhaven_dggkwj.jpg`) |
 | `handy/` | шаблон настроек Handy |
 | `etc/greetd` | greetd + ReGreet в мини-сессии niri, фон `greet.jpg` |
+| `etc/systemd`, `etc/dracut.conf.d` | таймаут монтирования корня в initrd 120 с (только для dracut) |
 
 ## Отличия от исходной машины
 - Мониторы определяются автоматически (`~/.local/bin/niri-autodisplay` при каждом старте niri: макс. частота при родном разрешении, VRR, масштаб по DPI, слева направо; убери строку AUTOGEN в `display.kdl`, чтобы зафиксировать вручную; поворот не определяется, моя раскладка в `display.kdl.example`); greeter генерирует `output` по подключённым портам.
 - Исправлен фон greeter'а (раньше указывал на несуществующий `greet.png`).
 - Убраны: путь к Handy AppImage (добавляется, если файл есть), garuda-алиас и логотип fastfetch, kvantum/qt5ct (не использовались).
 - Не включены: плагины Noctalia (ставятся сами), `fish_variables`, `settings.json` v4, кэш/состояние.
+- Приложения из лаунчера Noctalia запускаются отдельными systemd-юнитами (`launch_apps_as_systemd_services`): при нехватке памяти systemd-oomd убивает только прожорливое приложение, а не весь шелл со всем, что из него запущено.
+- В CachyOS `DefaultTimeoutStartSec=15s` действует и в initrd: после жёсткого выключения btrfs может монтировать корень дольше, и загрузка падает в emergency mode. Установщик даёт `sysroot.mount` 120 с и пересобирает initramfs (`limine-update` или `dracut --regenerate-all`).
+- Polkit-агент встроен в Noctalia (`polkit_agent = true`), `polkit-kde-agent` больше не ставится и не запускается, чтобы не было двух агентов.
+- Если стоит FireDragon, Mod+B открывает его, а не удалённый Firefox.
 - Fingerprint в lockscreen включён в конфиге, но нужен `fprintd` + `fprintd-enroll`.

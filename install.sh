@@ -50,7 +50,7 @@ ask fishtheme  "Apply Catppuccin Mocha colors to fish syntax highlighting?" n
 
 REPO_PKGS=(python nodejs npm niri noctalia cachyos-niri-noctalia wezterm fish fisher starship eza bat fastfetch ugrep direnv
   adw-gtk-theme capitaine-cursors catppuccin-gtk-theme-mocha ttf-jetbrains-mono-nerd adwaita-fonts
-  noto-fonts noto-fonts-emoji polkit-kde-agent xwayland-satellite xdg-desktop-portal-gnome
+  noto-fonts noto-fonts-emoji xwayland-satellite xdg-desktop-portal-gnome
   xdg-desktop-portal-gtk gnome-keyring wl-clipboard curl base-devel
   telegram-desktop filezilla git openssh k9s
   podman podman-compose slirp4netns fuse-overlayfs)
@@ -128,6 +128,8 @@ fi
 
 # tg-ws-proxy: autostart it (in its tray) only if the AUR install actually succeeded
 command -v tg-ws-proxy >/dev/null && printf '    spawn-sh-at-startup "tg-ws-proxy"\n' >> "$CFG/niri/cfg/autostart.kdl"
+# Firefox is removed once FireDragon is in: point Mod+B at it so the binding doesn't go dead
+command -v firedragon >/dev/null && sed -i 's/Open Browser: firefox" { spawn "firefox"/Open Browser: firedragon" { spawn "firedragon"/' "$CFG/niri/cfg/keybinds.kdl"
 
 # monitors: generated from what niri sees (now if a session is running, otherwise at first niri start)
 "$HOME/.local/bin/niri-autodisplay" 2>/dev/null || true
@@ -198,6 +200,16 @@ if (( OPT[handy] )); then
 fi
 # no Handy -> drop its keybinds so Ctrl+Space isn't swallowed by a dead binding
 (( OPT[handy] )) || sed -i '/Handy/d' "$CFG/niri/cfg/keybinds.kdl"
+
+# ---------- initrd root mount timeout (dracut/systemd initrd only) ----------
+# CachyOS' 15s DefaultTimeoutStartSec also applies to mounting / in the initrd; a slow btrfs mount after
+# an unclean shutdown (e.g. hard reset after an OOM) then lands in emergency mode. Give it 120s instead.
+if command -v dracut >/dev/null && ! cmp -s "$SRC/etc/systemd/sysroot.mount.d/10-timeout.conf" /etc/systemd/system/sysroot.mount.d/10-timeout.conf; then
+  sudo install -Dm644 "$SRC/etc/systemd/sysroot.mount.d/10-timeout.conf" /etc/systemd/system/sysroot.mount.d/10-timeout.conf
+  sudo install -Dm644 "$SRC/etc/dracut.conf.d/10-sysroot-timeout.conf" /etc/dracut.conf.d/10-sysroot-timeout.conf
+  if command -v limine-update >/dev/null; then sudo limine-update; else sudo dracut --regenerate-all --force; fi \
+    || echo "!! initramfs rebuild failed: the root mount timeout applies after the next successful rebuild"
+fi
 
 # ---------- greeter (greetd + ReGreet in a mini niri session) ----------
 if (( OPT[greeter] )); then

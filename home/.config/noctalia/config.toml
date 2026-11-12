@@ -5,6 +5,8 @@
 avatar_path = "@HOME@/.face"
 font_family = "Adwaita Sans"
 polkit_agent = true
+# each app launched from Noctalia gets its own systemd unit: systemd-oomd then kills only the hog, not the whole shell
+launch_apps_as_systemd_services = true
 setup_wizard_enabled = false
 telemetry_enabled = false
 clipboard_enabled = true
@@ -239,7 +241,7 @@ transition_on_startup = false
     path = "@HOME@/Pictures/Wallpapers/wallhaven_dggkwj.jpg"
 
 [plugins]
-auto_update = true
+auto_update = "all"
 enabled = [
     "noctalia/timer",
     "noctalia/screen_recorder",
@@ -267,7 +269,7 @@ order = [ "default" ]
     border_width = 0.0
     shadow = false
     capsule = true
-    capsule_fill = "surface_variant"
+    capsule_fill = "surface_container"
     capsule_opacity = 1.0
     radius = 12
     concave_edge_corners = true
@@ -292,7 +294,7 @@ order = [ "default" ]
         [[bar.default.capsule_group]]
         id = "sysmon"
         members = [ "cpu", "temp", "ram" ]
-        fill = "surface_variant"
+        fill = "surface_container"
         opacity = 1.0
         padding = 6.0
 
