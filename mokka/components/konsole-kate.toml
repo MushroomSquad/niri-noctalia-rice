@@ -1,6 +1,7 @@
 id = "konsole-kate"
 title = "Konsole and Kate themes"
 group = "terminal"
+previews = ["catppuccin-konsole:assets/konsole.png"]
 default = true
 only_if_installed = "konsole or kate"
 

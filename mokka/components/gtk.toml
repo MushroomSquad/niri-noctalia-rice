@@ -2,6 +2,7 @@ id = "gtk"
 title = "GTK theme"
 description = "adw-gtk3 recolored by Noctalia, or the Colloid Catppuccin theme built from source."
 group = "gtk"
+previews = ["colloid:colloid.png", "colloid:colorschemes.png"]
 default = true
 default_variant = "noctalia"
 sources = ["colloid"]

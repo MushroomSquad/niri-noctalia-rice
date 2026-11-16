@@ -2,6 +2,7 @@ id = "kde-apps"
 title = "KDE apps look"
 description = "Mokka fonts, Kvantum style and Dolphin settings for KDE apps. Mokka.colors is installed but not selected."
 group = "qt"
+previews = ["garuda-mokka:usr/share/plasma/look-and-feel/MokkaKitty/contents/previews/preview.png"]
 default = true
 sources = ["garuda-mokka"]
 

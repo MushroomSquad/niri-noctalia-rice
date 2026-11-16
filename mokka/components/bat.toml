@@ -1,6 +1,7 @@
 id = "bat"
 title = "Catppuccin Mocha for bat"
 group = "terminal"
+previews = ["catppuccin-bat:assets/mocha.webp"]
 default = true
 [packages]
 repo = ["bat"]

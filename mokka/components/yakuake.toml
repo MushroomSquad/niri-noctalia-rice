@@ -1,6 +1,7 @@
 id = "yakuake"
 title = "Yakuake Mocha skin"
 group = "terminal"
+previews = ["garuda-mokka:usr/share/yakuake/skins/mocha/icon_big.png"]
 default = true
 only_if_installed = "yakuake"
 

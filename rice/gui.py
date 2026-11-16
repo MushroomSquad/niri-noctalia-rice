@@ -55,7 +55,7 @@ def palette_swatch(c):
         if cols:
             box = Gtk.Box(spacing=4, homogeneous=True, height_request=120)
             prov = Gtk.CssProvider()
-            prov.load_from_string("".join(f".sw{i}{{background:{col};border-radius:6px}}" for i, col in enumerate(cols)))
+            prov.load_from_string("".join(f".sw{i}{{background:{col};border-radius:6px;}}" for i, col in enumerate(cols)))
             for i, _ in enumerate(cols):
                 b = Gtk.Box()
                 b.add_css_class(f"sw{i}")

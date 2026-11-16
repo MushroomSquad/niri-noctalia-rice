@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Capture a real screenshot of a component into mokka/previews/<id>/.
+# Usage: mokka/capture-previews <id> [window-command...]
+# Applies the component, opens a representative window, runs `niri msg action screenshot-window --write-to-disk true
+sleep 1
+newest=$(find "$shots" -newer "$out/.stamp" -name '*.png' -printf '%T@ %p\n' | sort -n | tail -1 | cut -d' ' -f2-)
+[ -n "$newest" ] || { echo "no screenshot found in $shots (check niri screenshot-path)" >&2; exit 1; }
+mv "$newest" "$out/$id.png"
+kill "$pid" 2>/dev/null || true
+rm -f "$out/.stamp"
+echo "saved $out/$id.png"

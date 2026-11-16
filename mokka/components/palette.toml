@@ -4,7 +4,7 @@ description = "Noctalia palette generated from Garuda Mokka colors; fixes the le
 group = "look"
 default = true
 sources = ["garuda-mokka", "catppuccin-konsole"]
-previews = ["garuda-mokka:contents/screenshot.jpg"]
+previews = ["garuda-mokka:usr/share/plasma/look-and-feel/Mokka/contents/previews/fullscreenpreview.jpg"]
 
 [[steps]]
 op = "generate"

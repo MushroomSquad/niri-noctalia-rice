@@ -1,6 +1,7 @@
 id = "wallpapers"
 title = "Garuda wallpapers"
 group = "wallpapers"
+previews = ["garuda-mokka:usr/share/wallpapers/Mokka-tree/contents/screenshot.jpg", "garuda-mokka:usr/share/wallpapers/City-Horizon/contents/screenshot.png"]
 default = true
 default_variant = "mokka"
 
