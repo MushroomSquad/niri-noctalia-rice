@@ -699,3 +699,81 @@ Every task must leave `python -m unittest discover -s tests -v` green and offlin
 | V4 T5 asserts `build()` return shape | T5 acceptance |
 | V5 disabled entry keeps its file lists; `owned()` includes them | §2 State |
 | V6 `toml_set`/`json_set` create missing files; starship `default_variant = "mokka"` | §2 ops, T6 `starship` |
+
+## 12. Addendum A+B (2026-11-16, post-implementation): Noctalia 5.5 settings layer, user custom dir
+
+Status: pending review (architect → critic). Found during live verification M1, after the system update to Noctalia 5.5.0.
+
+### 12.0 Facts (verified on this machine)
+- Noctalia 5.x has two config layers. `~/.config/noctalia/config.toml` is the base. `~/.local/state/noctalia/settings.toml`
+  is written by the Noctalia settings UI and **overrides** it. Here it holds `[theme] custom_palette="Catppuccin-Lavender"`
+  and full `builtin_ids`/`community_ids` lists. So `toml_set` on config.toml for `theme.*` is a no-op on any machine where
+  Noctalia has run. `shell.font_family` is not in the state file yet, so it still comes from config.toml.
+  `noctalia msg config-get theme.custom_palette` → `'Catppuccin-Lavender'`, `config-get shell.font_family` → `'Adwaita Sans'`.
+- IPC: `noctalia msg color-scheme-get|color-scheme-set <builtin|wallpaper|community|custom> <name>` (persists to
+  settings.toml), `config-get <path>`, `config-set <path> <value>`, `config-reload`.
+- Noctalia 5.5 removed `starship` from builtin.toml. It is now a **community** template (`noctalia theme --list-templates`
+  lists it under "Community templates (cached)"). `tests/test_recipes_data.py::test_builtin_ids_exist` fails on 5.5 for
+  that reason.
+- niri 26.04: `include optional=true "<path>"` is valid when the file is missing (WARN only). A later include's `binds`
+  override earlier ones (checked with `niri validate`).
+
+### 12.1 A: Noctalia settings through IPC
+- New op `noctalia` (an apply-time step with the same trigger and `run_pending` semantics as `run when=apply`; shown as
+  `run` Changes in a dry run; skipped by `--no-run`). Forms:
+  - `{op="noctalia", color_scheme=["custom","Mokka"]}`
+  - `{op="noctalia", set="shell.font_family", value="Inter"}`
+  - `{op="noctalia", list_add="theme.templates.community_ids", item="starship"}` / `list_remove=…`
+  Each form reads first (`color-scheme-get` / `config-get`), writes only if different, and fails (exit ≠ 0 → `run_pending`)
+  if `noctalia` is missing or not running. The executor must determine the exact value syntax `config-set` accepts for
+  strings and lists, and test it against the live binary. On enable the previous value is recorded in state `prev` (via the
+  get call), and off_steps restore it.
+- Recipes:
+  - `palette`: keep `generate` + config.toml `toml_set` (fresh installs). Add `noctalia color_scheme=["custom","Mokka"]`
+    and replace `run noctalia msg templates-apply` only if color-scheme-set already re-renders templates (verify). The
+    legacy-id fix stays a config.toml patch and is mirrored with `list_remove`/`list_add` on `builtin_ids`.
+  - `gtk`: the colloid/noctalia variants toggle `gtk3`/`gtk4` with `list_remove`/`list_add` (plus the existing config.toml patch).
+  - `starship`: toggle `"starship"` in **`community_ids`** (config.toml patch + `noctalia` op). Remove it from
+    `builtin_ids` handling entirely.
+  - `fonts`: add `noctalia set shell.font_family Inter`.
+- `test_recipes_data`: the id pre-check validates `builtin_ids` ids against builtin.toml and `community_ids` ids against
+  `noctalia theme --list-templates` output (skip each when unavailable). It must pass on 5.5.
+
+### 12.2 B: persistent user custom dir `~/.config/rice-custom/`
+Goal: user additions that rice/install.sh never overwrite, back up, or own, and that are loaded **last** so they override.
+- Never in `owned()`, never written by rice except **seeding**: on every `apply` (and `install.sh`), create the dir and the
+  skeleton files below **only if missing** (`mokka/custom-skel/` → `~/.config/rice-custom/`, commented examples, no
+  personal data). The GUI gets an "Open custom folder" button (`xdg-open`).
+- Hooks, each loading custom content after the managed config:
+  - niri: `home/.config/niri/config.kdl` ends with `include optional=true "../rice-custom/niri.kdl"` (after noctalia.kdl).
+    The executor verifies the relative path resolves from `~/.config/niri/`.
+  - fish: the `fish` recipe appends a final block to the generated config.fish (copy-target patch) that sources
+    `~/.config/rice-custom/fish/*.fish` in sorted order, so custom aliases override Garuda's. For starship, a rice-owned
+    `~/.config/fish/conf.d/rice-custom-env.fish` sets `STARSHIP_CONFIG=~/.config/rice-custom/starship.toml` only if that
+    file exists (conf.d runs before config.fish's `starship init`).
+  - wezterm: `wezterm.lua` calls `~/.config/rice-custom/wezterm.lua` via `pcall(dofile, …)` before `return config`. If
+    the file returns a function, it is called with `config`.
+  - gtk-3.0/gtk-4.0 `gtk.css`: `@import url("../rice-custom/gtk.css");` after the noctalia import. The skeleton ships an
+    empty gtk.css, so the import never dangles.
+  - Surgical targets (kdeglobals, dolphinrc, qt6ct.conf, kvantum.kvconfig, micro settings.json, Noctalia settings.toml)
+    already keep user keys. README documents this.
+- Migration: `home/.config/fish/conf.d/rice-local.fish` contains personal settings (paths, env vars) and leaves
+  the repo. On this machine, the first apply moves an existing `~/.config/fish/conf.d/rice-local.fish` to
+  `~/.config/rice-custom/fish/local.fish` if the target is missing. Rice does this once, records it in state, and never
+  deletes user files otherwise.
+- README section "Свои настройки".
+
+### 12.3 Tasks
+- **TA (Noctalia IPC):** `rice/recipe.py` (op schema), `rice/cli.py` (execute, prev, dry-run listing), recipes palette/gtk/
+  starship/fonts, `tests/test_recipes_data.py`, tests with a fake `noctalia` executable on PATH (records calls, serves gets).
+  Acceptance: unittest green on Noctalia 5.5; fake-noctalia test proves get-before-set (second apply makes 0 set calls),
+  failure → `run_pending`, off restores `prev`; T6 acceptance still passes with `--no-run`.
+- **TB (custom dir):** `mokka/custom-skel/**`, the seeding in `rice/cli.py`, hooks in `home/.config/niri/config.kdl`,
+  `home/.config/wezterm/wezterm.lua`, `home/.config/gtk-{3,4}.0/gtk.css`, recipe `fish` (+ `rice-custom-env.fish` in
+  `mokka/files/`), the migration, the GUI button, README. Acceptance: in temp HOME, apply seeds the dir; a user file
+  `rice-custom/fish/x.fish` with `alias ls 'echo custom'` survives a second apply and `fish -c 'source config.fish; functions ls'`
+  shows the custom alias; `niri validate` passes with and without `rice-custom/niri.kdl`; a bind in `rice-custom/niri.kdl`
+  overriding `Mod+T` validates; `rice owned` lists nothing under `.config/rice-custom`; `install.sh` install_tree never
+  touches it.
+- TA and TB touch disjoint recipe files except none (fish is TB-only, palette/gtk/starship/fonts TA-only). Both edit
+  `rice/cli.py`, so they run sequentially: TA, then TB.
