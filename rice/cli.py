@@ -37,7 +37,29 @@ class _Skip(Exception):
 
 
 def components() -> list[Component]:
-    return [recipe.load(p) for p in sorted(COMPONENTS_DIR.glob("*.toml"))]
+    comps = [recipe.load(p) for p in sorted(COMPONENTS_DIR.glob("*.toml"))]
+    for c in comps:
+        _resolve_theme(c)
+    return comps
+
+
+def _resolve_theme(c) -> bool:
+    """Rewrite c.theme_dir in the recipe to the dir name found on disk (case-insensitive); False if absent."""
+    n = c.theme_dir
+    if not n:
+        return True
+    roots = [Path("/usr/share/icons"), Path.home() / ".local/share/icons"]
+    found = next((d.name for r in roots if r.is_dir() for d in r.iterdir()
+                  if d.is_dir() and d.name.lower() == n.lower()), None)
+    if found is None:
+        return False
+    if found != n:
+        sub = lambda o: json.loads(json.dumps(o).replace(n, found))
+        c.steps, c.off_steps, c.niri_snippet = sub(c.steps), sub(c.off_steps), sub(c.niri_snippet)
+        for v in c.variants.values():
+            v.steps = sub(v.steps)
+        c.theme_dir = found
+    return True
 
 
 def _lock() -> dict:
@@ -208,6 +230,10 @@ def _process(c, st, lk, home, ts, variant, dry, force, packages, run, log, overl
         raise ValueError(f"unknown variant {variant!r}")
     if not dry and packages:
         _install_packages(c, variant, log)
+    if not _resolve_theme(c):
+        if packages and not dry:
+            raise RuntimeError("cursor theme dir not found")
+        return Result("skipped", message=f"theme dir {c.theme_dir} not found"), False, None
     whole = _render(c, variant, lk, home, dry)
     if whole is None:
         return Result("skipped", message="not built yet (fetch/apply first)"), None, None

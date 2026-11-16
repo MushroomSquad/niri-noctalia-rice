@@ -1,0 +1,111 @@
+id = "gtk"
+title = "GTK theme"
+description = "adw-gtk3 recolored by Noctalia, or the Colloid Catppuccin theme built from source."
+group = "gtk"
+default = true
+default_variant = "noctalia"
+sources = ["colloid"]
+
+[variants.noctalia]
+title = "Noctalia (adw-gtk3, live colors)"
+packages = { repo = ["adw-gtk-theme"] }
+
+[[variants.noctalia.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.builtin_ids"
+value = { add = "gtk3" }
+
+[[variants.noctalia.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.builtin_ids"
+value = { add = "gtk4" }
+
+[[variants.noctalia.steps]]
+op = "copy"
+src = "repo:home/.config/gtk-3.0/gtk.css"
+dst = ".config/gtk-3.0/gtk.css"
+
+[[variants.noctalia.steps]]
+op = "copy"
+src = "repo:home/.config/gtk-4.0/gtk.css"
+dst = ".config/gtk-4.0/gtk.css"
+
+[[variants.noctalia.steps]]
+op = "ini_set"
+target = ".config/gtk-3.0/settings.ini"
+section = "Settings"
+key = "gtk-theme-name"
+value = "adw-gtk3-dark"
+
+[[variants.noctalia.steps]]
+op = "ini_set"
+target = ".config/gtk-4.0/settings.ini"
+section = "Settings"
+key = "gtk-theme-name"
+value = "adw-gtk3-dark"
+
+[[variants.noctalia.steps]]
+op = "run"
+argv = ["gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", "adw-gtk3-dark"]
+
+[[variants.noctalia.steps]]
+op = "run"
+argv = ["noctalia", "msg", "templates-apply"]
+
+[variants.colloid]
+title = "Colloid Catppuccin (runs upstream build script; libadwaita apps ignore it)"
+packages = { repo = ["sassc"] }
+
+[[variants.colloid.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.builtin_ids"
+value = { remove = "gtk3" }
+
+[[variants.colloid.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.builtin_ids"
+value = { remove = "gtk4" }
+
+[[variants.colloid.steps]]
+op = "replace"
+target = "colloid:install.sh"
+pattern = 'clean_theme && '
+repl = ''
+
+[[variants.colloid.steps]]
+op = "run"
+when = "build"
+src = "colloid"
+argv = ["./install.sh", "-n", "Catppuccin", "-t", "purple", "-c", "dark", "--tweaks", "catppuccin", "-d", "{out}/.themes"]
+
+[[variants.colloid.steps]]
+op = "copy"
+src = "repo:mokka/files/gtk-colloid.css"
+dst = ".config/gtk-3.0/gtk.css"
+
+[[variants.colloid.steps]]
+op = "copy"
+src = "repo:mokka/files/gtk-colloid.css"
+dst = ".config/gtk-4.0/gtk.css"
+
+[[variants.colloid.steps]]
+op = "ini_set"
+target = ".config/gtk-3.0/settings.ini"
+section = "Settings"
+key = "gtk-theme-name"
+value = "Catppuccin-Purple-Dark-Catppuccin"
+
+[[variants.colloid.steps]]
+op = "ini_set"
+target = ".config/gtk-4.0/settings.ini"
+section = "Settings"
+key = "gtk-theme-name"
+value = "Catppuccin-Purple-Dark-Catppuccin"
+
+[[variants.colloid.steps]]
+op = "run"
+argv = ["gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", "Catppuccin-Purple-Dark-Catppuccin"]

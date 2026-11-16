@@ -1,0 +1,33 @@
+id = "cursor"
+title = "Catppuccin Mocha Mauve cursor"
+description = "Cursor theme for niri, GTK and XDG default."
+group = "look"
+default = true
+sources = ["garuda-mokka"]
+packages = { aur = ["catppuccin-cursors-mocha"] }
+# resolved case-insensitively under /usr/share/icons and ~/.local/share/icons; the name found on disk is used
+theme_dir = "Catppuccin-Mocha-Mauve-Cursors"
+niri_snippet = 'cursor { xcursor-theme "Catppuccin-Mocha-Mauve-Cursors"; xcursor-size 24; }'
+
+[[steps]]
+op = "copy"
+src = "garuda-mokka:etc/skel/.icons/default/index.theme"
+dst = ".icons/default/index.theme"
+
+[[steps]]
+op = "ini_set"
+target = ".config/gtk-3.0/settings.ini"
+section = "Settings"
+key = "gtk-cursor-theme-name"
+value = "Catppuccin-Mocha-Mauve-Cursors"
+
+[[steps]]
+op = "ini_set"
+target = ".config/gtk-4.0/settings.ini"
+section = "Settings"
+key = "gtk-cursor-theme-name"
+value = "Catppuccin-Mocha-Mauve-Cursors"
+
+[[steps]]
+op = "run"
+argv = ["gsettings", "set", "org.gnome.desktop.interface", "cursor-theme", "Catppuccin-Mocha-Mauve-Cursors"]

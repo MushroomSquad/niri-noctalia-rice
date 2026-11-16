@@ -65,6 +65,7 @@ class Component:
     default_variant: str | None
     path: Path
     reversible: bool = field(default=True)
+    theme_dir: str | None = None  # icon/cursor theme dir name, resolved case-insensitively by cli
 
 
 def _check_steps(steps, where):
@@ -123,7 +124,7 @@ def load(path) -> Component:
         packages=d.get("packages", {}), only_if_installed=d.get("only_if_installed"),
         previews=d.get("previews", []), sources=d.get("sources", []), steps=d.get("steps", []),
         off_steps=d.get("off_steps"), niri_snippet=d.get("niri_snippet"), variants=variants,
-        default_variant=dv, path=path, reversible=reversible)
+        default_variant=dv, path=path, reversible=reversible, theme_dir=d.get("theme_dir"))
 
 
 def all_steps(c: Component, variant: str | None = None) -> list:
@@ -303,6 +304,8 @@ def patch(text: str, op: dict, home) -> str:
     if kind == "drop_lines":
         rx = re.compile(op["pattern"])
         return "".join(l for l in _lines(text) if not rx.search(l))
+    if isinstance(op.get("value"), str):
+        op = dict(op, value=op["value"].replace("$HOME", str(home)))
     return {"ini_set": _ini_set, "toml_set": _toml_set, "json_set": _json_set}[kind](text, op)
 
 

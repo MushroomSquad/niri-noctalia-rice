@@ -1,0 +1,71 @@
+id = "qt"
+title = "Qt via Kvantum + qt6ct"
+description = "Mokka Kvantum theme; qt6ct reads the Noctalia-generated palette."
+group = "qt"
+default = true
+sources = ["garuda-mokka"]
+packages = { repo = ["kvantum", "qt6ct"] }
+
+[[steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/Kvantum/Mokka"
+dst = ".config/Kvantum/Mokka"
+
+[[steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/Kvantum/CatppuccinMochaMauve"
+dst = ".config/Kvantum/CatppuccinMochaMauve"
+
+[[steps]]
+op = "ini_set"
+target = ".config/Kvantum/kvantum.kvconfig"
+section = "General"
+key = "theme"
+value = "Mokka"
+
+[[steps]]
+op = "ini_set"
+target = ".config/qt6ct/qt6ct.conf"
+section = "Appearance"
+key = "style"
+value = "kvantum-dark"
+
+[[steps]]
+op = "ini_set"
+target = ".config/qt6ct/qt6ct.conf"
+section = "Appearance"
+key = "custom_palette"
+value = "true"
+
+[[steps]]
+op = "ini_set"
+target = ".config/qt6ct/qt6ct.conf"
+section = "Appearance"
+key = "color_scheme_path"
+value = "$HOME/.config/qt6ct/colors/noctalia.conf"
+
+[[steps]]
+op = "ini_set"
+target = ".config/qt6ct/qt6ct.conf"
+section = "Fonts"
+key = "general"
+value = '"Inter,10,-1,5,50,0,0,0,0,0"'
+
+[[steps]]
+op = "ini_set"
+target = ".config/qt6ct/qt6ct.conf"
+section = "Fonts"
+key = "fixed"
+value = '"JetBrainsMono Nerd Font,10,-1,5,50,0,0,0,0,0"'
+
+[[steps]]
+op = "replace"
+target = ".config/niri/cfg/misc.kdl"
+pattern = 'QT_QPA_PLATFORMTHEME "gtk3"'
+repl = 'QT_QPA_PLATFORMTHEME "qt6ct"'
+
+[[off_steps]]
+op = "replace"
+target = ".config/niri/cfg/misc.kdl"
+pattern = 'QT_QPA_PLATFORMTHEME "qt6ct"'
+repl = 'QT_QPA_PLATFORMTHEME "gtk3"'

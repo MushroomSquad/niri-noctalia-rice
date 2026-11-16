@@ -1,0 +1,109 @@
+id = "kde-apps"
+title = "KDE apps look"
+description = "Mokka fonts, Kvantum style and Dolphin settings for KDE apps. Mokka.colors is installed but not selected."
+group = "qt"
+default = true
+sources = ["garuda-mokka"]
+
+[[steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/color-schemes/Mokka.colors"
+dst = ".local/share/color-schemes/Mokka.colors"
+
+[[steps]]
+op = "ini_set"
+target = ".config/kdeglobals"
+section = "General"
+key = "font"
+value = "Inter,10,-1,5,75,0,0,0,0,0,Bold"
+
+[[steps]]
+op = "ini_set"
+target = ".config/kdeglobals"
+section = "General"
+key = "menuFont"
+value = "Inter,10,-1,5,75,0,0,0,0,0,Bold"
+
+[[steps]]
+op = "ini_set"
+target = ".config/kdeglobals"
+section = "General"
+key = "smallestReadableFont"
+value = "Inter,8,-1,5,75,0,0,0,0,0,Bold"
+
+[[steps]]
+op = "ini_set"
+target = ".config/kdeglobals"
+section = "General"
+key = "toolBarFont"
+value = "Inter,10,-1,5,75,0,0,0,0,0,Bold"
+
+[[steps]]
+op = "ini_set"
+target = ".config/kdeglobals"
+section = "General"
+key = "fixed"
+value = "JetBrainsMono Nerd Font,10,-1,5,75,0,0,0,0,0,Bold"
+
+[[steps]]
+op = "ini_set"
+target = ".config/kdeglobals"
+section = "KDE"
+key = "widgetStyle"
+value = "kvantum-dark"
+
+[[steps]]
+op = "ini_set"
+target = ".config/kdeglobals"
+section = "Icons"
+key = "Theme"
+value = "Tela-circle-dracula-dark"
+
+[[steps]]
+op = "ini_set"
+target = ".config/dolphinrc"
+section = "General"
+key = "AutoExpandFolders"
+value = "true"
+
+[[steps]]
+op = "ini_set"
+target = ".config/dolphinrc"
+section = "General"
+key = "EditableUrl"
+value = "true"
+
+[[steps]]
+op = "ini_set"
+target = ".config/dolphinrc"
+section = "General"
+key = "FilterBar"
+value = "true"
+
+[[steps]]
+op = "ini_set"
+target = ".config/dolphinrc"
+section = "General"
+key = "ShowFullPath"
+value = "true"
+
+[[steps]]
+op = "ini_set"
+target = ".config/dolphinrc"
+section = "General"
+key = "ShowFullPathInTitlebar"
+value = "true"
+
+[[steps]]
+op = "ini_set"
+target = ".config/dolphinrc"
+section = "General"
+key = "ShowCopyMoveMenu"
+value = "true"
+
+[[steps]]
+op = "ini_set"
+target = ".config/dolphinrc"
+section = "MainWindow"
+key = "MenuBar"
+value = "Disabled"

@@ -1,0 +1,17 @@
+id = "niri-look"
+title = "Mokka window radius"
+description = "Window corner radius 16 instead of 20."
+group = "look"
+default = true
+
+[[steps]]
+op = "replace"
+target = ".config/niri/cfg/rules.kdl"
+pattern = 'geometry-corner-radius 20 // Set every window'
+repl = 'geometry-corner-radius 16 // Set every window'
+
+[[off_steps]]
+op = "replace"
+target = ".config/niri/cfg/rules.kdl"
+pattern = 'geometry-corner-radius 16 // Set every window'
+repl = 'geometry-corner-radius 20 // Set every window'

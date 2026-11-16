@@ -1,0 +1,62 @@
+id = "fonts"
+title = "Inter + JetBrainsMono Nerd"
+description = "Inter for the UI and JetBrainsMono Nerd Font for monospace."
+group = "look"
+default = true
+packages = { repo = ["inter-font", "ttf-jetbrains-mono-nerd"] }
+
+[[steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "shell.font_family"
+value = "Inter"
+
+[[steps]]
+op = "ini_set"
+target = ".config/gtk-3.0/settings.ini"
+section = "Settings"
+key = "gtk-font-name"
+value = "Inter 10"
+
+[[steps]]
+op = "ini_set"
+target = ".config/gtk-4.0/settings.ini"
+section = "Settings"
+key = "gtk-font-name"
+value = "Inter 10"
+
+[[steps]]
+op = "run"
+argv = ["gsettings", "set", "org.gnome.desktop.interface", "font-name", "Inter 10"]
+
+[[steps]]
+op = "run"
+argv = ["gsettings", "set", "org.gnome.desktop.interface", "monospace-font-name", "JetBrainsMono Nerd Font 10"]
+
+[[off_steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "shell.font_family"
+value = "Adwaita Sans"
+
+[[off_steps]]
+op = "ini_set"
+target = ".config/gtk-3.0/settings.ini"
+section = "Settings"
+key = "gtk-font-name"
+value = "Adwaita Sans 10"
+
+[[off_steps]]
+op = "ini_set"
+target = ".config/gtk-4.0/settings.ini"
+section = "Settings"
+key = "gtk-font-name"
+value = "Adwaita Sans 10"
+
+[[off_steps]]
+op = "run"
+argv = ["gsettings", "set", "org.gnome.desktop.interface", "font-name", "Adwaita Sans 10"]
+
+[[off_steps]]
+op = "run"
+argv = ["gsettings", "set", "org.gnome.desktop.interface", "monospace-font-name", "Adwaita Mono 10"]

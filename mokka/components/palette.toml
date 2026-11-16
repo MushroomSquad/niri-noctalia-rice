@@ -1,0 +1,61 @@
+id = "palette"
+title = "Mokka palette"
+description = "Noctalia palette generated from Garuda Mokka colors; fixes the legacy gtk/kde template ids."
+group = "look"
+default = true
+sources = ["garuda-mokka", "catppuccin-konsole"]
+previews = ["garuda-mokka:contents/screenshot.jpg"]
+
+[[steps]]
+op = "generate"
+generator = "noctalia_palette"
+
+[[steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.custom_palette"
+value = "Mokka"
+
+[[steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.builtin_ids"
+value = { remove = "gtk" }
+
+[[steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.builtin_ids"
+value = { remove = "kde" }
+
+[[steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.builtin_ids"
+value = { add = "gtk3" }
+
+[[steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.builtin_ids"
+value = { add = "gtk4" }
+
+[[steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.builtin_ids"
+value = { add = "kcolorscheme" }
+
+[[steps]]
+op = "run"
+argv = ["noctalia", "msg", "templates-apply"]
+
+[[off_steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.custom_palette"
+value = "Catppuccin-Lavender"
+
+[[off_steps]]
+op = "run"
+argv = ["noctalia", "msg", "templates-apply"]
