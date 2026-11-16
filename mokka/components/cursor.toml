@@ -14,6 +14,13 @@ op = "copy"
 src = "garuda-mokka:etc/skel/.icons/default/index.theme"
 dst = ".icons/default/index.theme"
 
+# upstream says Catppuccin-Mocha-Mauve-Cursors; the package may install it lowercase (name is resolved on disk)
+[[steps]]
+op = "replace"
+target = ".icons/default/index.theme"
+pattern = "(?m)^Inherits=.*$"
+repl = "Inherits=Catppuccin-Mocha-Mauve-Cursors"
+
 [[steps]]
 op = "ini_set"
 target = ".config/gtk-3.0/settings.ini"
