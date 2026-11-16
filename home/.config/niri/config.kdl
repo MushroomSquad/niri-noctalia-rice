@@ -10,3 +10,4 @@ include "./cfg/rice.kdl"
 
 include "./noctalia.kdl"
 
+include optional=true "../rice-custom/niri.kdl"

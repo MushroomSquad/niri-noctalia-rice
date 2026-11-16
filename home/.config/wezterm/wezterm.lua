@@ -20,4 +20,17 @@ config.hide_tab_bar_if_only_one_tab = true
 config.scrollback_lines = 10000
 config.hyperlink_rules = wezterm.default_hyperlink_rules()
 
+local p = os.getenv("HOME") .. "/.config/rice-custom/wezterm.lua"
+local custom = io.open(p, "r")
+if custom then
+  custom:close()
+  wezterm.add_to_config_reload_watch_list(p)
+  local f, err = loadfile(p)
+  if f then
+    f(config)
+  else
+    wezterm.log_error(err)
+  end
+end
+
 return config

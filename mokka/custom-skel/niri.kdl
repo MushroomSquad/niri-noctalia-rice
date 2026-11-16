@@ -1,0 +1,4 @@
+// Loaded after the managed config and Noctalia. Validate edits with niri validate.
+// binds {
+//     Mod+T { spawn "wezterm"; }
+// }

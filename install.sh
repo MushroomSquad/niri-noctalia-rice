@@ -106,6 +106,7 @@ install_tree() { # install_tree <srcdir> <dstdir>
   done < <(cd "$1" && find . -type f -print0)
 }
 install_tree "$SRC/home" "$HOME"
+(cd "$SRC" && python -c 'from pathlib import Path; from rice.cli import _seed_custom; _seed_custom(Path.home())')
 sed -i "s|@HOME@|$HOME|g" "$CFG/noctalia/config.toml"
 if (( OPT[wallpapers] == 0 )); then
   # config points at wallpapers we didn't copy: switch Noctalia's wallpaper off instead of leaving a dead path
@@ -215,6 +216,8 @@ fi
 cat <<'MSG'
 
 Done. Log out/reboot, then inside niri run once:
+  python -m rice apply --defaults # run from the repository, or use GUI Apply
+Noctalia must be running: its ops stay pending until Apply runs inside the session.
   noctalia msg templates-apply     # regenerates wezterm/gtk/starship/niri colors from the palette
 Backups of overwritten files: *.bak-<timestamp>
 Handy: pick/download a speech model in its window on first start (models are not in the repo, ~1.8 GB for mine).

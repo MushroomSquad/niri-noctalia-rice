@@ -142,6 +142,41 @@ argv=["true"]
         shutil.rmtree(fetch.cache_root())
         self.assertIsNone(cli.status()["alpha"].needs_apply)
 
+    def test_custom_seed_once_per_apply_and_never_owned(self):
+        custom = self.home / ".config/rice-custom"
+        with mock.patch.object(cli, "_seed_custom", wraps=cli._seed_custom) as seed:
+            cli.apply(self.ids(), run=False)
+            seed.assert_called_once_with(self.home)
+        skel = cli.REPO / "mokka/custom-skel"
+        for src in skel.rglob("*"):
+            if src.is_file():
+                self.assertEqual((custom / src.relative_to(skel)).read_bytes(), src.read_bytes())
+        self.assertFalse((custom / "starship.toml").exists())
+        (custom / "niri.kdl").write_text("// user edit\n")
+        user = custom / "fish/x.fish"
+        user.write_text("alias ls 'echo custom'\n")
+        (custom / "gtk3.css").unlink()
+        cli.apply(self.ids(), force=True, run=False)
+        self.assertEqual((custom / "niri.kdl").read_text(), "// user edit\n")
+        self.assertEqual(user.read_text(), "alias ls 'echo custom'\n")
+        self.assertEqual((custom / "gtk3.css").read_bytes(), (skel / "gtk3.css").read_bytes())
+        self.assertFalse(any("rice-custom" in p for p in cli.owned()))
+        self.assertNotIn("rice-custom", json.dumps(state.load()))
+        self.assertFalse(list(custom.rglob("*.bak-*")))
+
+    def test_custom_seed_absent_on_dry_run_and_status(self):
+        with mock.patch.object(cli, "_seed_custom", wraps=cli._seed_custom) as seed:
+            cli.apply(self.ids(), dry_run=True, run=False)
+            cli.status()
+            seed.assert_not_called()
+        self.assertFalse((self.home / ".config/rice-custom").exists())
+        # A dry run must not re-create a deleted seed in an already applied HOME either.
+        cli.apply(self.ids(), run=False)
+        example = self.home / ".config/rice-custom/gtk4.css"
+        example.unlink()
+        cli.apply(self.ids(), dry_run=True, run=False)
+        self.assertFalse(example.exists())
+
     def test_dry_run_prints_zero_changes(self):
         cli.apply(self.ids())
         out = io.StringIO()

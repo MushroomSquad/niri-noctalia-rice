@@ -387,9 +387,27 @@ def _sync_kdl(comps, st, results, extra, home, ts, dry):
                 break
 
 
+def _seed_custom(home):
+    """Seed missing user examples without ownership, state entries, or backups."""
+    dest = Path(home) / ".config/rice-custom"
+    dest.mkdir(parents=True, exist_ok=True)
+    for src in sorted((REPO / "mokka/custom-skel").rglob("*")):
+        if not src.is_file():
+            continue
+        target = dest / src.relative_to(REPO / "mokka/custom-skel")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with target.open("xb") as out:
+                out.write(src.read_bytes())
+        except FileExistsError:
+            pass
+
+
 def _apply(ids, variants, dry_run, force, packages, run, log):
     lk, st, home, ts = _lock(), state.load(), Path.home(), time.strftime("%Y%m%d-%H%M%S")
     comps = components()
+    if not dry_run:
+        _seed_custom(home)
     results, needs, overlay = {}, {}, {}
     for i in ids:
         if i not in {c.id for c in comps}:

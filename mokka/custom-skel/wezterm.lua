@@ -1,0 +1,3 @@
+local config = ...
+-- Loaded last; uncomment an example to override the managed config.
+-- config.font_size = 14

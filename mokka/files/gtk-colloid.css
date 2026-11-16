@@ -1,1 +1,3 @@
 /* Colloid Catppuccin is active: the Noctalia GTK import is intentionally dropped. */
+@import url("../rice-custom/gtk3.css");
+@import url("../rice-custom/gtk4.css");

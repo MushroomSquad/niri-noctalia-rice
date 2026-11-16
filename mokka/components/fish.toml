@@ -23,6 +23,21 @@ pattern = "(?<=')eza\\b"
 repl = "eza --icons --color=always"
 
 [[steps]]
+op = "replace"
+target = ".config/fish/config.fish"
+pattern = '\Z'
+repl = '''
+
+# User overrides: keep this block last.
+if test -f "$HOME/.config/rice-custom/starship.toml"
+    set -gx STARSHIP_CONFIG "$HOME/.config/rice-custom/starship.toml"
+end
+for custom_file in (printf '%s\n' "$HOME"/.config/rice-custom/fish/*.fish | sort)
+    source "$custom_file"
+end
+'''
+
+[[steps]]
 op = "copy"
 src = "done:done.fish"
 dst = ".config/fish/conf.d/"

@@ -1,0 +1,3 @@
+# Optional: copy your complete prompt config to starship.toml in this directory.
+# That file replaces the managed prompt; this .example is never loaded.
+# add_newline = false

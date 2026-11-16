@@ -25,6 +25,8 @@ Handy скачивается с GitHub (последняя версия или `
 
 Перезаписанные установщиком файлы сохраняются как `*.bak-<время>`. После первого входа в niri выполни `noctalia msg templates-apply`. В меню приложений появится **niri-noctalia-rice**: ярлык запускает GUI из каталога репозитория, поэтому оставь checkout на месте.
 
+Для операций Noctalia нужна запущенная Noctalia (Noctalia must be running). При первой установке они остаются в состоянии `run_pending`, пока внутри сессии не выполнится `python -m rice apply --defaults` из каталога репозитория или **Apply** в GUI.
+
 ## Компоненты Mokka
 
 | Компоненты | Что меняют |
@@ -79,6 +81,18 @@ python -m rice refresh .config/niri/cfg/misc.kdl
 
 Rice проверяет хеши целых файлов и сохраняет ручные правки без `--force`; общие конфиги правит точечно, не перезаписывая цвета Noctalia. Начальные копии (например, `lazy-lock.json` Neovim и Starship в варианте Noctalia) не отслеживаются по хешу. `python -m rice refresh <relpath>` возвращает версию из `home/<relpath>` с резервной копией и повторно применяет включённые точечные правки. Команда подходит для файлов, у которых есть копия в `home/`.
 
+## Свои настройки
+
+Храни свои дополнения в `~/.config/rice-custom/`: rice и полный `install.sh` создают только отсутствующие примеры из `mokka/custom-skel/`. Существующие файлы не перезаписываются и не копируются в резервные копии; каталог не входит в `rice owned` и не проходит через `install_tree`. `--dry-run` его не создаёт. Кнопка **Open custom folder** в GUI создаёт и открывает этот каталог.
+
+- `fish/*.fish` загружаются по имени в сортированном порядке последними, поэтому могут переопределять alias из Garuda. Например: `alias ls 'echo custom'`.
+- `niri.kdl` подключается после `noctalia.kdl`; здесь можно переопределять привязки клавиш. Опечатка в `rice-custom/niri.kdl` ломает весь конфиг niri: проверяй изменения командой `niri validate`. Если `~/.config/niri` — симлинк, относительный include может молча пропустить этот файл.
+- `wezterm.lua` начинается с `local config = ...`; далее можно менять поля, например `config.font_size = 14`. Файл загружается перед `return config` и добавляется в список наблюдения WezTerm.
+- `gtk3.css` и `gtk4.css` содержат дополнения GTK 3 и GTK 4 после основных стилей. В варианте Colloid подключаются оба файла; держи в них совместимые с нужной версией правила.
+- Необязательный `starship.toml` **заменяет prompt целиком** через `STARSHIP_CONFIG`. По умолчанию есть только незагружаемый `starship.toml.example`; для своей темы создай полный `starship.toml` и открой новый fish.
+
+В `kdeglobals`, `dolphinrc`, `qt6ct.conf`, `kvantum.kvconfig`, `micro/settings.json` и `noctalia/settings.toml` rice меняет только нужные ключи, сохраняя остальные пользовательские настройки.
+
 ## Что внутри
 
 | Путь | Назначение |
@@ -86,7 +100,7 @@ Rice проверяет хеши целых файлов и сохраняет �
 | `home/.config/niri` | конфиг niri; `noctalia.kdl` генерирует Noctalia, `cfg/rice.kdl` — rice |
 | `home/.config/noctalia` | базовый конфиг, палитра Catppuccin-Lavender, `plugins.json` |
 | `home/.config/wezterm`, `home/.config/gtk-{3,4}.0` | базовые настройки терминала и GTK |
-| `home/.config/fish/conf.d/rice-local.fish` | локальные пользовательские настройки fish |
+| `mokka/custom-skel/` | примеры для личного каталога `~/.config/rice-custom/` |
 | `rice/`, `mokka/components/` | общий движок CLI/GUI и декларативные рецепты |
 | `mokka/files/`, `mokka/upstream.lock.toml` | файлы вариантов и закреплённые upstream-источники |
 | `nvim/`, `agents/` | исходники для рецептов приложений |

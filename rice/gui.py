@@ -1,5 +1,6 @@
 """GTK4/libadwaita front-end: a thin layer over the rice/cli.py API (PLAN §3)."""
 import sys
+import subprocess
 import threading
 from pathlib import Path
 
@@ -97,6 +98,7 @@ class Window(Adw.ApplicationWindow):
         side.add_top_bar(Adw.HeaderBar())
         top = Adw.HeaderBar()
         for label, fn in (("Check for updates", self.on_check), ("Fetch", self.on_fetch),
+                          ("Open custom folder", self.on_open_custom),
                           ("Show changes", self.on_diff), ("Apply", self.on_apply)):
             b = Gtk.Button(label=label)
             b.connect("clicked", fn)
@@ -224,7 +226,7 @@ class Window(Adw.ApplicationWindow):
             st = self.status.get(cid)
             was = bool(st and st.enabled)
             v = list(c.variants)[combo.get_selected()] if combo else None
-            if sw.get_active() and (not was or (v and st and v != st.variant)):
+            if sw.get_active() and (not was or (st and st.needs_apply) or (v and st and v != st.variant)):
                 on.append(cid)
                 if v:
                     variants[cid] = v
@@ -242,6 +244,13 @@ class Window(Adw.ApplicationWindow):
                 self.log("update check done")
         self.log("checking for updates...")
         self.run_bg(lambda: _cli().status(remote=True), done)
+
+    def on_open_custom(self, *_):
+        def work():
+            folder = Path.home() / ".config/rice-custom"
+            folder.mkdir(parents=True, exist_ok=True)
+            subprocess.run(["xdg-open", str(folder)], check=True)
+        self.run_bg(work, lambda _r: None)
 
     def on_fetch(self, *_):
         ids = [cid for cid, (sw, _c, _x) in self.rows.items() if sw.get_active()]
