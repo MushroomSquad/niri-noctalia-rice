@@ -105,12 +105,12 @@ argv = ["./install.sh", "-n", "Catppuccin", "-t", "purple", "-c", "dark", "--twe
 
 [[variants.colloid.steps]]
 op = "copy"
-src = "repo:mokka/files/gtk-colloid.css"
+src = "repo:mokka/files/gtk3-colloid.css"
 dst = ".config/gtk-3.0/gtk.css"
 
 [[variants.colloid.steps]]
 op = "copy"
-src = "repo:mokka/files/gtk-colloid.css"
+src = "repo:mokka/files/gtk4-colloid.css"
 dst = ".config/gtk-4.0/gtk.css"
 
 [[variants.colloid.steps]]
