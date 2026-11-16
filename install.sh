@@ -2,7 +2,10 @@
 # Standalone installer: niri + Noctalia (Catppuccin Lavender), wezterm, fish+starship, greetd/ReGreet,
 # wallpapers, Handy (speech-to-text). Arch/CachyOS only. Run as a normal user; sudo is asked when needed.
 # Optional parts are asked interactively; without a TTY or with --yes the defaults [Y/n] are used.
-#   ./install.sh [--only pkgs,greeter,handy] [--no-mokka] [--gui] [--yes] [--no-pkgs] [--no-greeter] [--no-handy] [--no-wallpapers] [--no-nvim] [--no-agents] [--firedragon] [--fish-theme]
+#   ./install.sh [--only pkgs,greeter,handy] [--no-mokka] [--gui] [--yes] [--no-pkgs] [--no-greeter] [--no-handy] [--no-wallpapers] [--no-nvim] [--no-agents] [--no-firedragon] [--fish-theme]
+# Re-run anytime to update: ./install.sh update   (= --yes; pulls the repo first; package updates run through cachy-update, interactively)
+# --firedragon is accepted for compatibility (FireDragon is installed by default).
+# shellcheck disable=SC2034 # UPDATE is informational (update == --yes)
 set -euo pipefail
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,11 +17,12 @@ outs=$(for s in /sys/class/drm/card*-*/status; do
   [[ $(cat "$s" 2>/dev/null) == connected ]] && { n=${s%/status}; echo "${n#*/card*-}"; }; done; true)
 CFG="$HOME/.config"
 YES=0; [[ -t 0 ]] || YES=1
-ONLY=""; GUI=0
+ONLY=""; GUI=0; UPDATE=0
 RICE_WITH=()
 declare -A OPT=()   # name -> 1/0, preset by flags
 while (( $# )); do
   case $1 in
+    update) UPDATE=1; YES=1;;
     --yes) YES=1;;
     --only)
       [[ $# -ge 2 && -n $2 && $2 != --* ]] || { echo "--only requires pkgs,greeter,handy (comma-separated)"; exit 1; }
@@ -27,7 +31,7 @@ while (( $# )); do
     --no-wallpapers) OPT[wallpapers]=0;; --no-mokka) OPT[mokka]=0;; --gui) GUI=1;;
     --nvim) OPT[nvim]=1; RICE_WITH+=(nvim);; --no-nvim) OPT[nvim]=0;;
     --agents) OPT[agents]=1; RICE_WITH+=(agents);; --no-agents) OPT[agents]=0;;
-    --firedragon) OPT[firedragon]=1;;
+    --firedragon) OPT[firedragon]=1;; --no-firedragon) OPT[firedragon]=0;;
     --fish-theme) OPT[fishtheme]=1;;
     *) echo "unknown arg: $1"; exit 1;;
   esac
@@ -45,6 +49,16 @@ if [[ -n $ONLY ]]; then
   done
 fi
 
+# Pull the latest repo before doing anything, then re-exec once so the rest of this run uses the fresh copy.
+# NIRI_RICE_REEXECED guards against looping. Skipped for --only: rice recipes call install.sh --only mid-apply.
+if [[ -z $ONLY && -z ${NIRI_RICE_REEXECED:-} ]] && git -C "$SRC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if git -C "$SRC" pull --ff-only; then
+    NIRI_RICE_REEXECED=1 exec "$SRC/install.sh" "$@"
+  else
+    echo "!! git pull failed (local changes in $SRC?); continuing with the checked-out copy"
+  fi
+fi
+
 # ask <name> <question> <default y|n>  -> sets OPT[name]
 ask() {
   [[ -n ${OPT[$1]:-} ]] && return
@@ -60,26 +74,51 @@ ask wallpapers "Copy wallpapers to ~/Pictures/Wallpapers?" y
 ask handy      "Download and set up Handy (speech-to-text, Ctrl+Space)?" y
 ask nvim       "Install Neovim + AstroNvim config (plugins are fetched on first nvim start)?" y
 ask agents     "Install Claude Code and Codex agents (GSD) to ~/.claude/agents and ~/.codex/agents?" y
-ask firedragon "Install FireDragon browser (chaotic-aur/AUR)?" n
+ask firedragon "Install FireDragon (firedragon-catppuccin-bin) replacing Firefox?" y
 ask fishtheme  "Apply Catppuccin Mocha colors to fish syntax highlighting?" n
 ask mokka      "Apply Garuda Mokka components with rice?" y
 fi
 
 REPO_PKGS=(python git niri noctalia cachyos-niri-noctalia wezterm fish fisher starship eza bat fastfetch ugrep direnv
   adw-gtk-theme inter-font catppuccin-gtk-theme-mocha ttf-jetbrains-mono-nerd adwaita-fonts
-  noto-fonts noto-fonts-emoji polkit-kde-agent xwayland-satellite xdg-desktop-portal-gnome
-  xdg-desktop-portal-gtk gnome-keyring wl-clipboard curl)
+  noto-fonts noto-fonts-emoji xwayland-satellite xdg-desktop-portal-gnome
+  xdg-desktop-portal-gtk gnome-keyring wl-clipboard curl
+  nodejs npm base-devel telegram-desktop filezilla openssh k9s podman podman-compose slirp4netns fuse-overlayfs)
 (( OPT[greeter] )) && REPO_PKGS+=(greetd greetd-regreet plymouth)
 (( OPT[handy] ))   && REPO_PKGS+=(fuse2 wtype xdotool)
-AUR_PKGS=(tela-circle-icon-theme-dracula)
+AUR_PKGS=(tela-circle-icon-theme-dracula clash-verge-rev-bin tg-ws-proxy-bin spotify-launcher)
 
 if (( OPT[pkgs] )); then
+  # Updates go through cachy-update (never -Syu); everything below only fills in what is missing.
+  sudo pacman -S --needed --noconfirm cachy-update libnotify
+  if [[ -t 0 ]]; then
+    echo ">>> Launching cachy-update: go through its prompts, this script continues after it exits."
+    cachy-update || echo "!! cachy-update exited non-zero; continuing anyway"
+  else
+    echo "!! no TTY: skipping the interactive cachy-update run, run it yourself afterwards"
+  fi
+
+  # existing but non-functional (e.g. a paru-bin linked against the wrong libalpm) doesn't count
+  helper=""
+  for h in paru yay; do command -v "$h" >/dev/null && "$h" --version >/dev/null 2>&1 && { helper=$h; break; }; done
+  if [[ -z $helper ]]; then
+    # built from source (not paru-bin) so it links against this box's libalpm
+    sudo pacman -Rns --noconfirm paru-bin 2>/dev/null || true
+    tmp=$(mktemp -d)
+    git clone --depth 1 https://aur.archlinux.org/paru.git "$tmp" \
+      && (cd "$tmp" && makepkg -si --needed --noconfirm) || echo "!! paru bootstrap failed"
+    rm -rf "$tmp"
+    command -v paru >/dev/null && paru --version >/dev/null 2>&1 && helper=paru
+  fi
+
   sudo pacman -S --needed --noconfirm "${REPO_PKGS[@]}" || {
     # names differ between repos; retry one by one so a single miss doesn't abort
     for p in "${REPO_PKGS[@]}"; do sudo pacman -S --needed --noconfirm "$p" || echo "!! skipped $p"; done; }
-  helper=$(command -v paru || command -v yay || true)
   if [[ -n $helper ]]; then "$helper" -S --needed --noconfirm "${AUR_PKGS[@]}" || echo "!! AUR failed: ${AUR_PKGS[*]}"
   else echo "!! no AUR helper: install manually: ${AUR_PKGS[*]}"; fi
+  # rootless podman needs a subuid/subgid range; useradd grants one by default, but add it if missing
+  grep -q "^$USER:" /etc/subuid 2>/dev/null || sudo usermod --add-subuids 100000-165535 "$USER"
+  grep -q "^$USER:" /etc/subgid 2>/dev/null || sudo usermod --add-subgids 100000-165535 "$USER"
 fi
 
 if [[ -z $ONLY ]]; then
@@ -124,6 +163,42 @@ grep -qx 'DP-2' <<<"$outs" || sed -i '/^monitors = \[ "DP-2" \]/d' "$CFG/noctali
 if command -v gsettings >/dev/null; then
   gsettings set org.gnome.desktop.interface icon-theme 'Tela-circle-dracula' || true
   gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' || true
+fi
+
+# tg-ws-proxy: autostart (in its tray) only if the AUR install succeeded
+mkdir -p "$CFG/niri/cfg"
+if command -v tg-ws-proxy >/dev/null; then
+  grep -qF 'tg-ws-proxy' "$CFG/niri/cfg/autostart.kdl" 2>/dev/null ||
+    printf '    spawn-sh-at-startup "tg-ws-proxy"\n' >> "$CFG/niri/cfg/autostart.kdl"
+fi
+
+# cachy-update tray applet + daily check (it has no non-interactive update flag, so not used for `update`)
+if command -v cachy-update >/dev/null; then
+  cachy-update --tray --enable || true
+  cachy-update --check --enable || true
+fi
+
+if command -v npm >/dev/null; then
+  # user-owned prefix, no sudo: `sudo npm install -g` skips postinstall scripts as root
+  npm config get prefix | grep -qx "$HOME/.local" || npm config set prefix "$HOME/.local"
+  for pkgcmd in "@anthropic-ai/claude-code:claude" "@openai/codex:codex"; do
+    pkg=${pkgcmd%%:*}; cmd=${pkgcmd##*:}
+    working() { command -v "$cmd" >/dev/null && "$cmd" --version >/dev/null 2>&1; }
+    working && continue
+    npm install -g "$pkg" || true
+    # postinstall can race its sibling optionalDependency on a fresh install; a second run fixes it
+    working || npm install -g "$pkg" || true
+    working || echo "!! $cmd still broken after a retry: run 'node \"\$(npm root -g)/$pkg/install.cjs\"' by hand"
+  done
+fi
+
+# initrd root mount timeout (dracut/systemd initrd only): CachyOS' 15s DefaultTimeoutStartSec also applies to
+# mounting / in the initrd; a slow btrfs mount after an unclean shutdown lands in emergency mode. Give it 120s.
+if command -v dracut >/dev/null && ! cmp -s "$SRC/etc/systemd/sysroot.mount.d/10-timeout.conf" /etc/systemd/system/sysroot.mount.d/10-timeout.conf; then
+  sudo install -Dm644 "$SRC/etc/systemd/sysroot.mount.d/10-timeout.conf" /etc/systemd/system/sysroot.mount.d/10-timeout.conf
+  sudo install -Dm644 "$SRC/etc/dracut.conf.d/10-sysroot-timeout.conf" /etc/dracut.conf.d/10-sysroot-timeout.conf
+  if command -v limine-update >/dev/null; then sudo limine-update; else sudo dracut --regenerate-all --force; fi \
+    || echo "!! initramfs rebuild failed: the root mount timeout applies after the next successful rebuild"
 fi
 
 if command -v fish >/dev/null; then
@@ -205,7 +280,7 @@ if (( OPT[mokka] )); then
     for name in "${RICE_WITH[@]}"; do
       (( OPT[$name] == 0 )) || with+=("$name")
     done
-    (( OPT[firedragon] == 0 )) || with+=(firedragon)
+    if (( OPT[firedragon] )); then with+=(firedragon); else without+=(firedragon); fi
     (( ${#with[@]} == 0 )) || rice_args+=(--with "$(IFS=,; echo "${with[*]}")")
     (( ${#without[@]} == 0 )) || rice_args+=(--without "$(IFS=,; echo "${without[*]}")")
     [[ ${RICE_NO_RUN:-0} != 1 ]] || rice_args+=(--no-run)
@@ -213,12 +288,21 @@ if (( OPT[mokka] )); then
   fi
 fi
 
+# FireDragon replaces Firefox: drop Firefox only once FireDragon is actually installed
+if (( OPT[firedragon] )) && command -v firedragon >/dev/null; then
+  sudo pacman -Rns --noconfirm firefox 2>/dev/null || true
+  # point Mod+B at FireDragon so the binding doesn't go dead
+  [[ ! -f $CFG/niri/cfg/keybinds.kdl ]] ||
+    sed -i 's/Open Browser: firefox" { spawn "firefox"/Open Browser: firedragon" { spawn "firedragon"/' "$CFG/niri/cfg/keybinds.kdl"
+fi
+
 cat <<'MSG'
 
-Done. Log out/reboot, then inside niri run once:
+Done. Log out/reboot (initramfs/greeter changes need it), then inside niri run once:
   python -m rice apply --defaults # run from the repository, or use GUI Apply
 Noctalia must be running: its ops stay pending until Apply runs inside the session.
   noctalia msg templates-apply     # regenerates wezterm/gtk/starship/niri colors from the palette
 Backups of overwritten files: *.bak-<timestamp>
+OS updates: cachy-update (tray applet + daily check enabled); ./install.sh update re-pulls this repo.
 Handy: pick/download a speech model in its window on first start (models are not in the repo, ~1.8 GB for mine).
 MSG

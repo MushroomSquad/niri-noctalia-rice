@@ -1,6 +1,6 @@
 id = "firedragon"
 title = "FireDragon browser"
 group = "apps"
-default = false
+default = true
 [packages]
-aur = ["firedragon"]
+aur = ["firedragon-catppuccin-bin"]
