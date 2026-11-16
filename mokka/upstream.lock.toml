@@ -1,0 +1,77 @@
+[garuda-mokka]
+url = "https://gitlab.com/garuda-linux/themes-and-settings/settings/garuda-mokka/-/archive/7e0a1c7503a79454782d082fda38f8af89be608f/garuda-mokka-7e0a1c7503a79454782d082fda38f8af89be608f.tar.gz"
+kind = "gitlab-archive"
+ref = "7e0a1c7503a79454782d082fda38f8af89be608f"
+sha256 = "d0089ec5ea3f90454631c43c35bc22d3b0a1489cd3690eb6692b221440603423"
+derived_from = "garuda-mokka/PKGBUILD:12"
+
+[catppuccin-kde]
+url = "https://github.com/catppuccin/kde.git"
+kind = "git"
+ref = "da69a64d239731fa344cc22ba14f3651dde540ac"
+derived_from = "garuda-mokka/PKGBUILD:13"
+
+[catppuccin-micro]
+url = "https://github.com/catppuccin/micro.git"
+kind = "git"
+ref = "015a2bb208f61a2d5a33121de2644bf4a059436b"
+derived_from = "garuda-mokka/PKGBUILD:14"
+
+[catppuccin-conky]
+url = "https://github.com/catppuccin/conky.git"
+kind = "git"
+ref = "eff06f767736fbf6d72641d5aef5ea1e507bb760"
+derived_from = "garuda-mokka/PKGBUILD:15"
+
+[catppuccin-konsole]
+url = "https://github.com/catppuccin/konsole.git"
+kind = "git"
+ref = "3b64040e3f4ae5afb2347e7be8a38bc3cd8c73a8"
+derived_from = "garuda-mokka/PKGBUILD:16"
+
+[catppuccin-bat]
+url = "https://github.com/catppuccin/bat.git"
+kind = "git"
+ref = "6810349b28055dce54076712fc05fc68da4b8ec0"
+derived_from = "garuda-mokka/PKGBUILD:17"
+
+[catppuccin-grub]
+url = "https://github.com/catppuccin/grub.git"
+kind = "git"
+ref = "0a37ab19f654e77129b409fed371891c01ffd0b9"
+derived_from = "garuda-mokka/PKGBUILD:18"
+
+[colloid]
+url = "https://github.com/vinceliuice/Colloid-gtk-theme.git"
+kind = "git"
+ref = "fd805dbeeacb12f7971b98408c415c3f472e5aef"
+derived_from = "garuda-mokka/PKGBUILD:19"
+
+[garuda-wallpapers]
+url = "https://gitlab.com/garuda-linux/themes-and-settings/artwork/garuda-wallpapers/-/archive/a0f808475c4854c90d340b3959d7733b95bbfd20/garuda-wallpapers-a0f808475c4854c90d340b3959d7733b95bbfd20.tar.gz"
+kind = "gitlab-archive"
+ref = "a0f808475c4854c90d340b3959d7733b95bbfd20"
+sha256 = "484af3ea588f7b642ac0fef910de6c2980ed6ca6ca8c58fb5d0db9f71e80c030"
+derived_from = "garuda-wallpapers/PKGBUILD:12"
+
+[done]
+url = "https://raw.githubusercontent.com/franciscolourenco/done/1.21.1/conf.d/done.fish"
+kind = "raw-file"
+ref = "1.21.1"
+sha256 = "402a83d98d815ff3972cac136d205391a61d6175cc3f8aff15bda018259678ba"
+derived_from = "garuda-fish-config/PKGBUILD:25"
+
+[garuda-fish-config]
+url = "https://gitlab.com/garuda-linux/pkgbuilds/-/raw/3d68043b106a6fa34ce7f8fbe96349105556bdcd/garuda-fish-config/config.fish"
+kind = "pkgbuilds-path"
+ref = "3d68043b106a6fa34ce7f8fbe96349105556bdcd"
+sha256 = "23f4d025f27c035d2553fd877ad44a52cca3b396c0e35e96c885eb5a99abab0e"
+derived_from = "garuda-fish-config/PKGBUILD:22"
+
+[garuda-starship-prompt]
+url = "https://gitlab.com/garuda-linux/pkgbuilds/-/raw/3d68043b106a6fa34ce7f8fbe96349105556bdcd/garuda-starship-prompt/starship.toml"
+kind = "pkgbuilds-path"
+ref = "3d68043b106a6fa34ce7f8fbe96349105556bdcd"
+sha256 = "1e0f834130db67b1335e9724a8a783c5a6c9f30074dcd8eb82672e0bda0dbcd5"
+derived_from = "garuda-starship-prompt/PKGBUILD:13"
+
