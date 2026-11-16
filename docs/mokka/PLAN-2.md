@@ -748,3 +748,25 @@ T1 ──> T2 ──┬─> T3 ──┐
 | C8: streamed-prompt risk row deleted; remove runs without `--noconfirm` | §7, §2.4.7, T1 tests |
 | A10: one result file `F` with a `running{pid}` record replaced by `done{rc, failed, message}`; poll every 500 ms; no-start after 30 s with the argv in the Log; never `proc.poll()` or the terminal rc; terminal table with wezterm `--always-new-process --cwd`, foot not footclient, konsole `--separate`, gnome-terminal `--wait` via `$TERMINAL`/xdg, `$TERMINAL` basename mapping; "No terminal found" toast; `cd REPO` and an absolute `sys.executable` inside `bash -c` | §0 row 4, §1 D0/D2, §2.4.1–3 and §2.4.5, §3 `poll_state`, T1 tests, §7 row 3 |
 | A11: no pruning of old state entries (owned paths kept); the fixture with yakuake and firedragon; `status()` has no yakuake key; `--no-packages` as a hidden no-op for one release; steps skipped for sets already installed | §2.3, §2.4.6, §3 CLI, T2 U2 test, T1 tests, §7 rows 5–6, ADR consequences |
+
+## 10. Verifier notes (PASS-WITH-NOTES), resolved — these override earlier sections where they differ
+- **F1 `--print-plan` ordering:** in T3 the order is: python bootstrap (only `pacman -S --needed python` if
+  `command -v python` fails; skipped in tests), then **all questions**, then `--print-plan` exit, then sudo/cachy-update
+  bootstrap (4.1), then file writes (4.2), then package install. The tests put a fake `sudo` that fails if called; `python`
+  is real.
+- **F2 steps for installed sets:** a set gets `step_always = true` when its step is idempotent and does more than install
+  (`firedragon`: Firefox removal and Mod+B rebind; `dev`: subuid/subgid). Such steps run whenever the set is selected,
+  installed or not. `greeter` and `handy` keep "skip step when installed". Add a T1 test for both behaviours.
+- **F3:** §6.2 is corrected. On this machine `dev` is *partial* (podman-compose and slirp4netns are missing), `nvim` is
+  partial (tree-sitter-cli is not installed; a cargo `tree-sitter` exists, and that is a true report), `telegram` is partial
+  (tg-ws-proxy-bin is missing), and `handy` is missing.
+- **F5:** factor the card's needs/button visibility into a pure function `needs_ui(status) -> (label|None, show_button)`
+  and unit-test it.
+- **F6:** add a test that string literals in `rice/gui.py` contain no Cyrillic (the GUI is English).
+- **F7:** SPEC-2's `post`/`remove` actions are realised as `step` (+`step_always`) and `removable`. This is an
+  intentional deviation.
+- **`pacman -Qq`:** used only in §2.4.7 remove, where `-T` can't tell "installed under this exact name". This is not a
+  leftover.
+- **T2's gui.py touch:** T2 lands before T3/T4 fork; T4 rebases on it.
+- **F8:** T5 greps README/GUI for the old "needs package" wording.
+- **F9:** a data test checks that every `mokka/previews/<id>/` matches a component id or a set id.
