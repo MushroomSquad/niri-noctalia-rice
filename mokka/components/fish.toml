@@ -35,7 +35,23 @@ end
 for custom_file in (printf '%s\n' "$HOME"/.config/rice-custom/fish/*.fish | sort)
     source "$custom_file"
 end
+
+# As in Garuda's stub.fish: fastfetch at the very bottom, after customizations.
+__garuda_fastfetch
 '''
+
+# __garuda_fastfetch looks for presets in /usr/share; ours is the rice-installed ~/.config/fastfetch/config.jsonc
+[[steps]]
+op = "replace"
+target = ".config/fish/config.fish"
+pattern = 'test -f /usr/share/fastfetch/presets/mokka\.jsonc'
+repl = 'test -f "$HOME/.config/fastfetch/config.jsonc"'
+
+[[steps]]
+op = "replace"
+target = ".config/fish/config.fish"
+pattern = 'fastfetch --config mokka\.jsonc'
+repl = 'fastfetch'
 
 [[steps]]
 op = "copy"

@@ -20,6 +20,12 @@ target = ".config/fastfetch/config.jsonc"
 pattern = "/usr/share/icons/garuda/mokka-fastfetch\\.png"
 repl = "$HOME/.local/share/icons/garuda/mokka-fastfetch.png"
 
+# Mokka's theme/icons/font formats show only the Qt/Plasma value ({1}), empty under niri; use fastfetch defaults (GTK)
+[[variants.mokka.steps]]
+op = "drop_lines"
+target = ".config/fastfetch/config.jsonc"
+pattern = '^\s*"format": "(\{1\}|\{\?1\}.*Unknown)",\s*$'
+
 [[variants.mokka.steps]]
 op = "copy"
 src = "garuda-mokka:usr/share/icons/garuda/mokka-fastfetch.png"
