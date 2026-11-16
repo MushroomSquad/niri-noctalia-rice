@@ -777,3 +777,61 @@ Goal: user additions that rice/install.sh never overwrite, back up, or own, and 
   touches it.
 - TA and TB touch disjoint recipe files except none (fish is TB-only, palette/gtk/starship/fonts TA-only). Both edit
   `rice/cli.py`, so they run sequentially: TA, then TB.
+
+### 12.4 Consensus fixes (Architect SOUND-WITH-CHANGES, Critic APPROVE-WITH-FIXES). These override §12.1–§12.3 where they differ
+Verified live: `noctalia msg config-set <path> <TOML literal>` (strings quoted, e.g. `'"Mokka"'`) writes the **settings.toml
+override layer**. Setting a key that is not yet in settings.toml **pins** it there, even if the value is unchanged.
+`config-get` prints a TOML literal (parse it with `tomllib.loads("v = " + out)`). A missing key prints "error: path not found"
+(rc 1). If Noctalia is not running it prints "Error: noctalia is not running" (rc 1).
+
+TA (Noctalia op):
+1. IPC writes are limited to `color_scheme` (`color-scheme-set custom <name>`) and list items in
+   `theme.templates.builtin_ids` (gtk3/gtk4 for the gtk variants; a one-time `list_remove "starship"`) and
+   `theme.templates.community_ids` (`starship`). There is no scalar `config-set`, so the fonts IPC step is dropped. The
+   config.toml patches stay for fresh installs.
+2. `noctalia msg config-reload` runs once before the first get in an apply. Get-before-set: write only if different.
+3. `prev` for `theme.*` comes from **files**, not IPC: the settings.toml value if present, else the pre-patch config.toml
+   value. It is read before any config.toml write in the same `_process`. List ops record `prev_present: bool`. Off reverses
+   only what rice changed: remove only if absent before, re-add only if present before.
+4. `disable()` executes `noctalia` off_steps as well as `run` off_steps.
+5. Failure semantics: "not running" or missing binary → failure → `run_pending`. "path not found" on a list → treat as an
+   empty list.
+6. Keep `run noctalia msg templates-apply` in palette.
+7. Tests use a fake `noctalia` on PATH that records calls and serves gets. They cover:
+   - get-before-set, forced via `--force` or `run_pending=True` with the target value already present, giving 0 sets;
+   - enable then disable restoring the original (settings.toml has no custom_palette → the config.toml original is
+     restored, and color-scheme-set gets the original);
+   - not running → `run_pending` → retry;
+   - `prev_present` for lists.
+   The id test checks builtin ids against builtin.toml and community ids against the stdout of
+   `noctalia theme --list-templates` (or the community catalog.json). It skips when unavailable or empty, and is green
+   on 5.5.
+8. Starship's acceptance is manual (M3): after enabling the noctalia variant, Noctalia fetches the community template
+   (network access done by Noctalia, an accepted exception) and its hook updates `[palettes.noctalia]` in
+   `~/.config/starship.toml`.
+9. Docs: Noctalia ops need a running Noctalia. On a fresh `install.sh` they stay `run_pending` until
+   `python -m rice apply --defaults` (or GUI Apply) runs inside the session. The README and install.sh closing message
+   say so.
+
+TB (custom dir):
+10. There is no migration code. Move the content of `home/.config/fish/conf.d/rice-local.fish` by hand into this
+    machine's `~/.config/rice-custom/fish/local.fish` (the main thread does this) and delete the file from the repo.
+11. Seed once per apply call, never on `--dry-run`. Seed only if missing. `mokka/custom-skel/` holds commented
+    examples only, including separate `gtk3.css` and `gtk4.css`.
+12. fish: no extra conf.d file. The appended config.fish block sets
+    `STARSHIP_CONFIG=~/.config/rice-custom/starship.toml` if that file exists, then sources `rice-custom/fish/*.fish`
+    sorted. The README notes that a custom starship.toml replaces the prompt.
+13. wezterm: `local p = os.getenv("HOME") .. "/.config/rice-custom/wezterm.lua"`. If the file exists, call
+    `wezterm.add_to_config_reload_watch_list(p)`, then `local f, err = loadfile(p)`. If `f` is set, call `f(config)`;
+    otherwise call `wezterm.log_error(err)`. The user file starts with `local config = ...`.
+14. gtk: both `home/.config/gtk-{3,4}.0/gtk.css` and `mokka/files/gtk-colloid.css` import
+    `../rice-custom/gtk3.css` or `gtk4.css` respectively.
+15. The README documents that a typo in `rice-custom/niri.kdl` breaks the whole niri config (check with `niri validate`),
+    and that a symlinked `~/.config/niri` silently skips the include.
+16. TB acceptance (hermetic, temp HOME, `--no-run`, no fastfetch):
+    - the seed exists;
+    - a user `rice-custom/fish/x.fish` survives a second apply;
+    - `fish -c` sourcing config.fish shows the custom alias;
+    - `niri validate` passes with and without `rice-custom/niri.kdl`, including a Mod+T override;
+    - `rice owned` lists nothing under `.config/rice-custom`;
+    - the dry run doesn't seed.
