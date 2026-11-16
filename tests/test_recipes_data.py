@@ -1,4 +1,5 @@
 """Data checks over every recipe in mokka/components."""
+import subprocess
 import tomllib
 import unittest
 from pathlib import Path
@@ -51,16 +52,36 @@ class RecipesData(unittest.TestCase):
                     self.assertFalse(s["section"].startswith("Colors:"), f"{c.id}: {s}")
                     self.assertNotIn(s["key"], COLOR_KEYS, f"{c.id}: {s}")
 
+    def _ids(self, suffix):
+        """(kind, id) of add ops on theme.templates.<suffix>."""
+        for c in self.comps:
+            for s in _all_steps(c):
+                key = s.get("key") or s.get("list_add") or s.get("list_remove") or ""
+                if key.endswith(suffix):
+                    if s["op"] == "toml_set" and isinstance(s["value"], dict):
+                        (kind, i), = s["value"].items()
+                        if kind == "add":
+                            yield c.id, i
+                    elif s["op"] == "noctalia" and "list_add" in s:
+                        yield c.id, s["item"]
+
     @unittest.skipUnless(BUILTIN.is_file(), "noctalia builtin.toml not installed")
     def test_builtin_ids_exist(self):
         known = set(tomllib.loads(BUILTIN.read_text())["templates"])
-        for c in self.comps:
-            for s in _all_steps(c):
-                if s["op"] == "toml_set" and s["key"].endswith("builtin_ids") and isinstance(s["value"], dict):
-                    (kind, i), = s["value"].items()
-                    if kind == "add":
-                        self.assertIn(i, known, f"{c.id}: {i}")
+        for cid, i in self._ids("builtin_ids"):
+            self.assertIn(i, known, f"{cid}: {i}")
 
+    def test_community_ids_exist(self):
+        try:
+            out = subprocess.run(["noctalia", "theme", "--list-templates"], capture_output=True, text=True,
+                                 timeout=30).stdout
+        except (OSError, subprocess.SubprocessError):
+            out = ""
+        if "Community templates" not in out:
+            self.skipTest("noctalia community template list unavailable")
+        known = {l.split()[0] for l in out.split("Community templates", 1)[1].splitlines()[2:] if l.split()}
+        for cid, i in self._ids("community_ids"):
+            self.assertIn(i, known, f"{cid}: {i}")
 
 if __name__ == "__main__":
     unittest.main()

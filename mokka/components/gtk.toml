@@ -24,6 +24,16 @@ key = "theme.templates.builtin_ids"
 value = { add = "gtk4" }
 
 [[variants.noctalia.steps]]
+op = "noctalia"
+list_add = "theme.templates.builtin_ids"
+item = "gtk3"
+
+[[variants.noctalia.steps]]
+op = "noctalia"
+list_add = "theme.templates.builtin_ids"
+item = "gtk4"
+
+[[variants.noctalia.steps]]
 op = "copy"
 src = "repo:home/.config/gtk-3.0/gtk.css"
 dst = ".config/gtk-3.0/gtk.css"
@@ -70,6 +80,16 @@ op = "toml_set"
 target = ".config/noctalia/config.toml"
 key = "theme.templates.builtin_ids"
 value = { remove = "gtk4" }
+
+[[variants.colloid.steps]]
+op = "noctalia"
+list_remove = "theme.templates.builtin_ids"
+item = "gtk3"
+
+[[variants.colloid.steps]]
+op = "noctalia"
+list_remove = "theme.templates.builtin_ids"
+item = "gtk4"
 
 [[variants.colloid.steps]]
 op = "replace"

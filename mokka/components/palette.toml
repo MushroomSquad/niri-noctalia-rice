@@ -47,8 +47,16 @@ key = "theme.templates.builtin_ids"
 value = { add = "kcolorscheme" }
 
 [[steps]]
+op = "noctalia"
+color_scheme = ["custom", "Mokka"]
+
+[[steps]]
 op = "run"
 argv = ["noctalia", "msg", "templates-apply"]
+
+[[off_steps]]
+op = "noctalia"
+color_scheme = ["custom", "Catppuccin-Lavender"]
 
 [[off_steps]]
 op = "toml_set"

@@ -1,4 +1,4 @@
-"""Recipe loader and the 8 ops (copy, generate, run, replace, drop_lines, ini_set, toml_set, json_set).
+"""Recipe loader and the 9 ops (copy, generate, run, noctalia, replace, drop_lines, ini_set, toml_set, json_set).
 
 Step schema (TOML `[[steps]]`, also `[[off_steps]]` and `[[variants.<n>.steps]]`), key `op`:
   copy        src="<lock-id>:<path>"|"repo:<path>", dst=<relpath under HOME>, track=true
@@ -6,6 +6,9 @@ Step schema (TOML `[[steps]]`, also `[[off_steps]]` and `[[variants.<n>.steps]]`
   run         argv=[...], when="apply"|"build", src=<lock-id>?, terminal=false
               (build: cwd is a scratch copy of source `src`; "{out}" in argv is the out dir)
               (apply: "{repo}" in argv is the repository root, independent of cwd)
+  noctalia    color_scheme=["<source>","<name>"] | list_add|list_remove="<dotted.path>", item="<id>"
+              (runs on the same trigger as `run when=apply`; reads via `noctalia msg` first, writes only if different;
+              fails if noctalia is missing or not running)
   replace     target, pattern (regex), repl           ($HOME in repl is substituted)
   drop_lines  target, pattern (regex)
   ini_set     target, section, key, value
@@ -28,9 +31,9 @@ Generator = Callable[[dict[str, Path], Path], dict[str, Path]]
 
 GROUPS = {"look", "qt", "gtk", "shell", "terminal", "apps", "wallpapers"}
 PATCH_OPS = {"replace", "drop_lines", "ini_set", "toml_set", "json_set"}
-OPS = PATCH_OPS | {"copy", "generate", "run"}
+OPS = PATCH_OPS | {"copy", "generate", "run", "noctalia"}
 REQUIRED = {
-    "copy": ("src", "dst"), "generate": ("generator",), "run": ("argv",),
+    "copy": ("src", "dst"), "generate": ("generator",), "run": ("argv",), "noctalia": (),
     "replace": ("target", "pattern", "repl"), "drop_lines": ("target", "pattern"),
     "ini_set": ("target", "section", "key", "value"),
     "toml_set": ("target", "key", "value"), "json_set": ("target", "key", "value"),
@@ -86,6 +89,16 @@ def _check_steps(steps, where):
                 raise ValueError(f"{w}.when: must be apply or build")
             if not isinstance(s["argv"], list) or not s["argv"]:
                 raise ValueError(f"{w}.argv: must be a non-empty list")
+        if s["op"] == "noctalia":
+            forms = [k for k in ("color_scheme", "list_add", "list_remove") if k in s]
+            if len(forms) != 1:
+                raise ValueError(f"{w}: exactly one of color_scheme, list_add, list_remove")
+            if forms[0] == "color_scheme":
+                cs = s["color_scheme"]
+                if not (isinstance(cs, list) and len(cs) == 2 and all(isinstance(x, str) for x in cs)):
+                    raise ValueError(f"{w}.color_scheme: expected [source, name]")
+            elif not isinstance(s.get("item"), str):
+                raise ValueError(f"{w}.item: missing for {forms[0]}")
         if s["op"] in ("replace", "drop_lines"):
             re.compile(s["pattern"])
         if s["op"] == "toml_set" and isinstance(s["value"], dict) and len(s["value"]) != 1:

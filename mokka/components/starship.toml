@@ -20,6 +20,22 @@ target = ".config/noctalia/config.toml"
 key = "theme.templates.builtin_ids"
 value = { remove = "starship" }
 
+[[variants.mokka.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.community_ids"
+value = { remove = "starship" }
+
+[[variants.mokka.steps]]
+op = "noctalia"
+list_remove = "theme.templates.builtin_ids"
+item = "starship"
+
+[[variants.mokka.steps]]
+op = "noctalia"
+list_remove = "theme.templates.community_ids"
+item = "starship"
+
 [variants.garuda]
 title = "Garuda"
 
@@ -34,6 +50,22 @@ target = ".config/noctalia/config.toml"
 key = "theme.templates.builtin_ids"
 value = { remove = "starship" }
 
+[[variants.garuda.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.community_ids"
+value = { remove = "starship" }
+
+[[variants.garuda.steps]]
+op = "noctalia"
+list_remove = "theme.templates.builtin_ids"
+item = "starship"
+
+[[variants.garuda.steps]]
+op = "noctalia"
+list_remove = "theme.templates.community_ids"
+item = "starship"
+
 [variants.noctalia]
 title = "Noctalia (live colors)"
 
@@ -47,7 +79,23 @@ track = false
 op = "toml_set"
 target = ".config/noctalia/config.toml"
 key = "theme.templates.builtin_ids"
+value = { remove = "starship" }
+
+[[variants.noctalia.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.community_ids"
 value = { add = "starship" }
+
+[[variants.noctalia.steps]]
+op = "noctalia"
+list_remove = "theme.templates.builtin_ids"
+item = "starship"
+
+[[variants.noctalia.steps]]
+op = "noctalia"
+list_add = "theme.templates.community_ids"
+item = "starship"
 
 [[variants.noctalia.steps]]
 op = "run"
