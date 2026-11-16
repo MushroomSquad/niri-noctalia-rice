@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=niri-noctalia-rice
+Comment=Apply and manage the niri + Noctalia rice (Mokka components)
+Exec=python -m rice gui
+Path=@REPO@
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Settings;DesktopSettings;
