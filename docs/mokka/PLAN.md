@@ -835,3 +835,23 @@ TB (custom dir):
     - `niri validate` passes with and without `rice-custom/niri.kdl`, including a Mod+T override;
     - `rice owned` lists nothing under `.config/rice-custom`;
     - the dry run doesn't seed.
+
+### 12.5 Verifier notes (PASS-WITH-NOTES), resolved
+- **Dry run:** a `--dry-run` (and `status`) makes **zero** `noctalia` calls: no gets and no `config-reload`. It lists the
+  op as a `run` Change only when the trigger fires. Test: the fake noctalia records 0 calls on `--dry-run`.
+- **disable() with Noctalia not running:** `noctalia` off-steps run **first**. If any fails, the component stays enabled,
+  nothing else is reverted, and the result is `failed` with "Noctalia not running; start it and retry". `prev` /
+  `prev_present` are kept until the off-steps succeed.
+- **State schema (§2 State is extended):** `prev` may also hold `"noctalia:color_scheme": [source, name]` and
+  `"noctalia:list:<path>:<item>": bool` (prev_present). The palette off-step calls `color-scheme-set <source> <name>` with
+  the pair read at enable time from settings.toml `[theme] source` + `custom_palette`/`builtin`. If those are absent, it
+  uses the pre-patch config.toml values.
+- **TA does not touch `fonts`.** TB owns `mokka/files/gtk-colloid.css` and `home/.config/gtk-{3,4}.0/gtk.css`.
+- **The TB acceptance runs `python -m rice fetch fish` first** (network ok, the cache is reused), then adds:
+  - `fish -c 'source $T/.config/fish/config.fish; echo $STARSHIP_CONFIG'` prints the path only when the file exists;
+  - a grep for `rice-custom/gtk3.css` and `gtk4.css` in both repo gtk.css files and in gtk-colloid.css;
+  - a grep for `loadfile` + `rice-custom/wezterm.lua` in wezterm.lua, and a `luac -p` / `lua -e` load check if lua is
+    available;
+  - grep checks in README and install.sh for the "Noctalia must be running" note and the niri typo warning.
+- **Superseded:** references to `rice-local.fish` in §2 Ownership, T6, M3 and the ADR are superseded by §12.4.10. M3 now
+  checks `~/.config/rice-custom/fish/local.fish`.
