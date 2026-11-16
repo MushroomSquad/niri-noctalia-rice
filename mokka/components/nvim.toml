@@ -2,8 +2,7 @@ id = "nvim"
 title = "Neovim + AstroNvim"
 group = "apps"
 default = true
-[packages]
-repo = ["neovim", "git", "ripgrep", "fd", "lazygit", "tree-sitter-cli", "unzip"]
+needs = ["nvim"]
 
 [[steps]]
 op = "copy"

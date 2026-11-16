@@ -4,7 +4,7 @@ import tomllib
 import unittest
 from pathlib import Path
 
-from rice import cli, recipe
+from rice import cli, packages, recipe
 
 ROOT = Path(__file__).parent.parent
 BUILTIN = Path("/usr/share/noctalia/assets/templates/builtin.toml")
@@ -24,6 +24,36 @@ class RecipesData(unittest.TestCase):
         self.assertTrue(self.comps)
         ids = [c.id for c in self.comps]
         self.assertEqual(len(ids), len(set(ids)))
+
+    def test_needs_exist_in_manifest(self):
+        sets = {s.id for s in packages.load()}
+        for c in self.comps:
+            for n in recipe.needs(c) + [n for v in c.variants.values() for n in v.needs]:
+                self.assertIn(n, sets, f"{c.id}: unknown need {n}")
+
+    def test_former_package_lists_covered(self):
+        former = """python git niri noctalia cachyos-niri-noctalia wezterm fish fisher starship eza bat fastfetch ugrep
+        direnv adw-gtk-theme inter-font catppuccin-gtk-theme-mocha ttf-jetbrains-mono-nerd adwaita-fonts noto-fonts
+        noto-fonts-emoji xwayland-satellite xdg-desktop-portal-gnome xdg-desktop-portal-gtk gnome-keyring wl-clipboard
+        curl nodejs npm base-devel telegram-desktop filezilla openssh k9s podman podman-compose slirp4netns
+        fuse-overlayfs greetd greetd-regreet plymouth fuse2 wtype xdotool tela-circle-icon-theme-dracula
+        clash-verge-rev-bin tg-ws-proxy-bin spotify-launcher firedragon-catppuccin-bin kvantum qt6ct-kde
+        catppuccin-cursors-mocha sassc neovim ripgrep fd lazygit tree-sitter-cli unzip micro""".split()
+        have = {n for s in packages.load() for n in s.repo + s.aur}
+        self.assertEqual([n for n in former if n not in have], [])
+
+    def test_recipes_reject_packages_key(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "x.toml"
+            f.write_text('id="x"\ntitle="X"\ngroup="look"\npackages={repo=["a"]}\n')
+            with self.assertRaisesRegex(ValueError, "moved to mokka/packages.toml"):
+                recipe.load(f)
+
+    def test_preview_dirs_match_ids(self):
+        ids = {c.id for c in self.comps} | {s.id for s in packages.load()}
+        dirs = {p.name for p in (ROOT / "mokka/previews").iterdir() if p.is_dir()}
+        self.assertEqual(sorted(dirs - ids), [])
 
     def test_source_ids_exist_in_lock(self):
         for c in self.comps:

@@ -3,7 +3,7 @@ title = "Inter + JetBrainsMono Nerd"
 description = "Inter for the UI and JetBrainsMono Nerd Font for monospace."
 group = "look"
 default = true
-packages = { repo = ["inter-font", "ttf-jetbrains-mono-nerd"] }
+needs = ["fonts"]
 
 [[steps]]
 op = "toml_set"

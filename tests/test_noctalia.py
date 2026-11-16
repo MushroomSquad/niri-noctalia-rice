@@ -106,7 +106,7 @@ class NoctaliaOp(unittest.TestCase):
         return [c for c in self.fk()["calls"] if name is None or c[0] == name]
 
     def apply(self, **kw):
-        return cli.apply(["pal"], packages=False, log=lambda *_: None, **kw)["pal"]
+        return cli.apply(["pal"], log=lambda *_: None, **kw)["pal"]
 
     def test_get_before_set_and_idempotent(self):
         r = self.apply()

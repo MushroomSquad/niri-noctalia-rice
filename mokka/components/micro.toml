@@ -3,8 +3,7 @@ title = "Catppuccin Mocha for micro"
 group = "terminal"
 previews = ["catppuccin-micro:assets/mocha.webp"]
 default = true
-[packages]
-repo = ["micro"]
+needs = ["micro"]
 
 [[steps]]
 op = "copy"

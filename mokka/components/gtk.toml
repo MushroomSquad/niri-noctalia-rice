@@ -9,7 +9,7 @@ sources = ["colloid"]
 
 [variants.noctalia]
 title = "Noctalia (adw-gtk3, live colors)"
-packages = { repo = ["adw-gtk-theme"] }
+needs = ["gtk-theme"]
 
 [[variants.noctalia.steps]]
 op = "toml_set"
@@ -67,7 +67,7 @@ argv = ["noctalia", "msg", "templates-apply"]
 
 [variants.colloid]
 title = "Colloid Catppuccin (runs upstream build script; libadwaita apps ignore it)"
-packages = { repo = ["sassc"] }
+needs = ["sassc"]
 
 [[variants.colloid.steps]]
 op = "toml_set"

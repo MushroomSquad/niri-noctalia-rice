@@ -45,7 +45,7 @@ SRC_RE = re.compile(r"^[\w.-]+:.+$")
 class Variant:
     name: str
     title: str
-    packages: dict
+    needs: list
     steps: list
 
 
@@ -58,7 +58,7 @@ class Component:
     default: bool
     conflicts: list
     requires: list
-    packages: dict
+    needs: list
     only_if_installed: str | None
     previews: list
     sources: list
@@ -116,13 +116,17 @@ def load(path) -> Component:
                 raise ValueError(f"{k}: missing")
         if d["group"] not in GROUPS:
             raise ValueError(f"group: must be one of {sorted(GROUPS)}, got {d['group']!r}")
+        if "packages" in d:
+            raise ValueError("packages: moved to mokka/packages.toml, use needs = [set ids]")
         _check_steps(d.get("steps", []), "steps")
         if "off_steps" in d:
             _check_steps(d["off_steps"], "off_steps")
         variants = {}
         for n, v in d.get("variants", {}).items():
             _check_steps(v.get("steps", []), f"variants.{n}.steps")
-            variants[n] = Variant(n, v.get("title", n), v.get("packages", {}), v.get("steps", []))
+            if "packages" in v:
+                raise ValueError(f"variants.{n}.packages: moved to mokka/packages.toml, use needs = [set ids]")
+            variants[n] = Variant(n, v.get("title", n), v.get("needs", []), v.get("steps", []))
         dv = d.get("default_variant")
         if variants and dv not in variants:
             raise ValueError(f"default_variant: {dv!r} is not one of {sorted(variants)}")
@@ -135,10 +139,16 @@ def load(path) -> Component:
     return Component(
         id=d["id"], title=d["title"], description=d.get("description", ""), group=d["group"],
         default=d.get("default", False), conflicts=d.get("conflicts", []), requires=d.get("requires", []),
-        packages=d.get("packages", {}), only_if_installed=d.get("only_if_installed"),
+        needs=d.get("needs", []), only_if_installed=d.get("only_if_installed"),
         previews=d.get("previews", []), sources=d.get("sources", []), steps=d.get("steps", []),
         off_steps=d.get("off_steps"), niri_snippet=d.get("niri_snippet"), variants=variants,
         default_variant=dv, path=path, reversible=reversible, theme_dir=d.get("theme_dir"))
+
+
+def needs(c: Component, variant: str | None = None) -> list[str]:
+    """Package-set ids the component needs: top-level plus the chosen (default if None) variant's."""
+    v = c.variants.get(variant or c.default_variant)
+    return list(dict.fromkeys(c.needs + (v.needs if v else [])))
 
 
 def all_steps(c: Component, variant: str | None = None) -> list:

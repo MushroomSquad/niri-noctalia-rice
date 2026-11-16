@@ -3,8 +3,7 @@ title = "Garuda fish configuration"
 group = "shell"
 default = true
 sources = ["garuda-fish-config", "done"]
-[packages]
-repo = ["fish", "eza", "bat", "starship", "ugrep", "direnv", "fastfetch"]
+needs = ["shell"]
 
 [[steps]]
 op = "copy"

@@ -4,8 +4,7 @@ group = "terminal"
 previews = ["catppuccin-bat:assets/mocha.webp"]
 default = true
 default_variant = "mokka"
-[packages]
-repo = ["bat"]
+needs = ["shell"]
 
 [variants.mokka]
 title = "Mokka"

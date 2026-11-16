@@ -5,7 +5,7 @@ group = "qt"
 previews = ["garuda-mokka:usr/share/plasma/look-and-feel/Mokka/contents/previews/preview.png"]
 default = true
 sources = ["garuda-mokka"]
-packages = { repo = ["kvantum"], aur = ["qt6ct-kde"] }
+needs = ["qt-theme"]
 
 [[steps]]
 op = "copy"

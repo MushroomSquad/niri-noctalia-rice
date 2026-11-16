@@ -3,8 +3,7 @@ title = "Starship prompt"
 group = "shell"
 default = true
 default_variant = "mokka"
-[packages]
-repo = ["starship"]
+needs = ["shell"]
 
 [variants.mokka]
 title = "Mokka"

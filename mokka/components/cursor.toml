@@ -4,7 +4,7 @@ description = "Cursor theme for niri, GTK and XDG default."
 group = "look"
 default = true
 sources = ["garuda-mokka"]
-packages = { aur = ["catppuccin-cursors-mocha"] }
+needs = ["cursors"]
 # resolved case-insensitively under /usr/share/icons and ~/.local/share/icons; the name found on disk is used
 theme_dir = "Catppuccin-Mocha-Mauve-Cursors"
 niri_snippet = 'cursor { xcursor-theme "Catppuccin-Mocha-Mauve-Cursors"; xcursor-size 24; }'

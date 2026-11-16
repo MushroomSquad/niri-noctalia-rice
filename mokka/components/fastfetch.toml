@@ -3,8 +3,7 @@ title = "Fastfetch"
 group = "shell"
 default = true
 default_variant = "mokka"
-[packages]
-repo = ["fastfetch"]
+needs = ["shell"]
 
 [variants.mokka]
 title = "Mokka (kitty logo)"

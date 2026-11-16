@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from rice import cli, fetch, state
+from rice import cli, fetch, packages, state
 from rice import lock as lock_mod
 from tests.test_fetch import make_repo, make_tar
 
@@ -84,14 +84,6 @@ target=".config/beta.ini"
 section="S"
 key="k"
 value="off"
-''')
-        self.write("greeter", '''id="greeter"
-title="G"
-group="apps"
-default=true
-[[steps]]
-op="run"
-argv=["true"]
 ''')
 
     def write(self, name, text):
@@ -181,17 +173,16 @@ argv=["true"]
         cli.apply(self.ids())
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            code = cli.main(["apply", "alpha", "beta", "--dry-run", "--no-packages", "--no-run"])
+            code = cli.main(["apply", "alpha", "beta", "--dry-run", "--no-run"])
         self.assertEqual(code, 0)
         self.assertIn("0 changes", out.getvalue().splitlines())
 
-    def test_defaults_sticky_and_exclude_apps_run(self):
+    def test_defaults_sticky(self):
         cli.apply(self.ids())
         cli.disable(["alpha"])
         ns = mock.Mock(ids=[], defaults=True, with_=None, without=None)
         sel = cli._select(ns, cli.components())
         self.assertEqual(sel, ["beta"])
-        self.assertNotIn("greeter", sel)
         fresh = state.load()
         self.assertTrue(fresh["alpha"]["disabled"])
 
@@ -289,6 +280,143 @@ argv=["sh","-c","touch {marker}; touch {{out}}/x"]
             cli.main(["--help"])
         for c in "lock fetch apply disable status update owned refresh gui".split():
             self.assertIn(c, out.getvalue())
+
+
+MANIFEST = """[[set]]
+id = "x"
+title = "X"
+group = "apps"
+repo = ["xpkg"]
+"""
+
+
+class NeedsTest(unittest.TestCase):
+    setUp = CliTest.setUp
+    write = CliTest.write
+    ids = CliTest.ids
+
+    def start(self):
+        (self.tmp / "packages.toml").write_text(MANIFEST)
+        self.unsat = {"xpkg"}
+        for p in (mock.patch.object(packages, "MANIFEST", self.tmp / "packages.toml"),
+                  mock.patch.object(packages, "unsatisfied", lambda names: set(self.unsat))):
+            p.start()
+            self.addCleanup(p.stop)
+        self.write("gamma", '''id="gamma"
+title="G"
+group="look"
+default=true
+needs=["x"]
+[[steps]]
+op="toml_set"
+target=".config/g.toml"
+key="g"
+value=1
+''')
+
+    def run_main(self, *argv):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = cli.main(list(argv))
+        return code, out.getvalue()
+
+    def test_unmet_need_skips_without_state_or_files(self):
+        self.start()
+        r = cli.apply(["gamma"], run=False)["gamma"]
+        self.assertEqual((r.status, r.message), ("skipped", "needs x"))
+        self.assertNotIn("gamma", state.load())
+        self.assertFalse((self.home / ".config/g.toml").exists())
+
+    def test_exit_codes(self):
+        self.start()
+        self.assertEqual(self.run_main("apply", "gamma", "--dry-run", "--no-run")[0], 1)
+        self.assertEqual(self.run_main("apply", "--defaults", "--dry-run", "--no-run")[0], 0)
+        self.assertEqual(self.run_main("apply", "--defaults", "--dry-run", "--no-run", "--no-packages")[0], 0)
+
+    def test_install_needs_installs_once_only_missing(self):
+        self.start()
+
+        def fake(ids, log=print):
+            self.unsat = set()
+            return packages.InstallResult(0, [], "")
+        with mock.patch.object(packages, "install", side_effect=fake) as inst:
+            r = cli.apply(["gamma", "alpha"], install_needs=True, run=False)
+        inst.assert_called_once()
+        self.assertEqual(inst.call_args[0][0], ["x"])
+        self.assertEqual(r["gamma"].status, "applied")
+
+    def test_dry_run_never_installs(self):
+        self.start()
+        with mock.patch.object(packages, "install") as inst:
+            r = cli.apply(["gamma"], dry_run=True, install_needs=True, run=False)
+        inst.assert_not_called()
+        self.assertEqual(r["gamma"].status, "skipped")
+
+    def test_status_fields_and_flags(self):
+        self.start()
+        cli.apply(["alpha"])
+        st = state.load()
+        st["alpha"]["run_pending"] = True
+        state.save(st)
+        s = cli.status()
+        self.assertEqual(s["gamma"].missing_needs, ["x"])
+        self.assertTrue(s["alpha"].run_pending)
+        self.assertFalse(s["alpha"].missing_needs)
+        out = self.run_main("status")[1]
+        self.assertIn("needs:x", out)
+        self.assertIn("run-pending", out)
+        self.unsat = set()
+        self.assertEqual(cli.status()["gamma"].missing_needs, [])
+
+    def test_packages_list_and_status(self):
+        self.start()
+        self.assertEqual(self.run_main("packages", "list")[1], "x\tapps\t0\t-\tX\n")
+        self.assertEqual(self.run_main("packages", "status")[1], "x: not installed\n")
+        self.unsat = set()
+        self.assertEqual(self.run_main("packages", "status")[1], "x: installed\n")
+
+    def test_result_file_lifecycle(self):
+        self.start()
+        f = self.tmp / "F.json"
+        seen = []
+
+        def ok(ids, log=print):
+            seen.append(json.loads(f.read_text()))
+            return packages.InstallResult(0, [], "fine")
+        with mock.patch.object(packages, "install", side_effect=ok):
+            code, out = self.run_main("packages", "install", "x", "--result", str(f))
+        self.assertEqual((code, seen[0]["state"], seen[0]["pid"]), (0, "running", os.getpid()))
+        self.assertEqual(packages.read_result(f), packages.InstallResult(0, [], "fine"))
+        self.assertIn("fine", out)
+        with mock.patch.object(packages, "install", side_effect=RuntimeError("boom")):
+            code, _ = self.run_main("packages", "install", "x", "--result", str(f))
+        r = packages.read_result(f)
+        self.assertEqual((code, r.rc, r.failed), (1, 1, ["x"]))
+        self.assertIn("boom", r.message)
+        with mock.patch.object(packages, "install", side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                self.run_main("packages", "install", "x", "--result", str(f))
+        self.assertEqual(json.loads(f.read_text())["state"], "done")
+
+    def test_old_state_compat(self):
+        self.start()
+        old = {"yakuake": {"whole": {".local/share/yakuake/skins/mocha/x": "abc"}, "variant": None},
+               "firedragon": {"run_pending": True}}
+        state.save(old)
+        raw = state.state_path().read_text()
+        self.assertNotIn("yakuake", cli.status())
+        cli.apply(["alpha"], dry_run=True, run=False)
+        self.assertEqual(self.run_main("apply", "--defaults", "--dry-run", "--no-run")[0], 0)
+        r = cli.disable(["yakuake"])["yakuake"]
+        self.assertEqual((r.status, r.message), ("failed", "unknown component yakuake"))
+        self.assertIn(".local/share/yakuake/skins/mocha/x", cli.owned())
+        self.assertEqual(state.state_path().read_text(), raw)
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(cli.main(["packages", "install", "yakuake"]), 2)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), self.assertRaises(SystemExit):
+            cli.main(["apply", "--help"])
+        self.assertNotIn("--no-packages", out.getvalue())
 
 
 if __name__ == "__main__":

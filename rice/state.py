@@ -25,7 +25,8 @@ class Status:
     stale_sources: list = field(default_factory=list)
     recipe_changed: bool = False
     modified: list = field(default_factory=list)
-    missing_packages: list = field(default_factory=list)
+    missing_needs: list = field(default_factory=list)
+    run_pending: bool = False
     app_missing: bool = False
     update_available: bool | None = None
 

@@ -140,9 +140,6 @@ class Window(Adw.ApplicationWindow):
     def badges(self, c):
         st = self.status.get(c.id)
         out = []
-        for kind, pk in (("AUR", c.packages.get("aur")), ("repo", c.packages.get("repo"))):
-            if pk:
-                out.append(f"needs package {', '.join(pk)} ({kind})")
         if st:
             if st.app_missing:
                 out.append("app not installed (skipped)")
@@ -152,8 +149,8 @@ class Window(Adw.ApplicationWindow):
                 out.append("edited by hand")
             if st.needs_apply:
                 out.append("needs apply")
-            if st.missing_packages:
-                out.append("missing: " + ", ".join(st.missing_packages))
+            if st.missing_needs:
+                out.append("needs packages: " + ", ".join(st.missing_needs))
         if not c.reversible:
             out.append("turning off keeps current settings")
         for v in c.variants:

@@ -158,7 +158,7 @@ class Render(unittest.TestCase):
 
     def comp(self, steps):
         d = {"id": "c", "title": "C", "description": "", "group": "look", "default": False, "conflicts": [],
-             "requires": [], "packages": {}, "only_if_installed": None, "previews": [], "sources": [],
+             "requires": [], "needs": [], "only_if_installed": None, "previews": [], "sources": [],
              "steps": steps, "off_steps": None, "niri_snippet": None, "variants": {}, "default_variant": None,
              "path": Path("x")}
         return recipe.Component(**d)

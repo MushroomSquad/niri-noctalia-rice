@@ -1,6 +1,0 @@
-id = "firedragon"
-title = "FireDragon browser"
-group = "apps"
-default = true
-[packages]
-aur = ["firedragon-catppuccin-bin"]
