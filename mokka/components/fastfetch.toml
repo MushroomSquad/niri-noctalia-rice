@@ -1,0 +1,34 @@
+id = "fastfetch"
+title = "Fastfetch"
+group = "shell"
+default = true
+default_variant = "mokka"
+[packages]
+repo = ["fastfetch"]
+
+[variants.mokka]
+title = "Mokka (kitty logo)"
+
+[[variants.mokka.steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/fastfetch/presets/mokka.jsonc"
+dst = ".config/fastfetch/config.jsonc"
+
+[[variants.mokka.steps]]
+op = "replace"
+target = ".config/fastfetch/config.jsonc"
+pattern = "/usr/share/icons/garuda/mokka-fastfetch\\.png"
+repl = "$HOME/.local/share/icons/garuda/mokka-fastfetch.png"
+
+[[variants.mokka.steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/icons/garuda/mokka-fastfetch.png"
+dst = ".local/share/icons/garuda/"
+
+[variants.repo]
+title = "Repository preset"
+
+[[variants.repo.steps]]
+op = "copy"
+src = "repo:mokka/files/fastfetch-repo.jsonc"
+dst = ".config/fastfetch/config.jsonc"

@@ -1,0 +1,10 @@
+id = "handy"
+title = "Handy speech-to-text"
+group = "apps"
+default = false
+description = "Runs install.sh in a terminal. Turning off keeps current settings."
+
+[[steps]]
+op = "run"
+argv = ["bash", "{repo}/install.sh", "--only", "handy"]
+terminal = true

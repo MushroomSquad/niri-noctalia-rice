@@ -1,0 +1,54 @@
+id = "starship"
+title = "Starship prompt"
+group = "shell"
+default = true
+default_variant = "mokka"
+[packages]
+repo = ["starship"]
+
+[variants.mokka]
+title = "Mokka"
+
+[[variants.mokka.steps]]
+op = "copy"
+src = "garuda-mokka:etc/skel/.config/starship-mokka.toml"
+dst = ".config/starship.toml"
+
+[[variants.mokka.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.builtin_ids"
+value = { remove = "starship" }
+
+[variants.garuda]
+title = "Garuda"
+
+[[variants.garuda.steps]]
+op = "copy"
+src = "garuda-starship-prompt:starship.toml"
+dst = ".config/starship.toml"
+
+[[variants.garuda.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.builtin_ids"
+value = { remove = "starship" }
+
+[variants.noctalia]
+title = "Noctalia (live colors)"
+
+[[variants.noctalia.steps]]
+op = "copy"
+src = "repo:mokka/files/starship-noctalia.toml"
+dst = ".config/starship.toml"
+track = false
+
+[[variants.noctalia.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.builtin_ids"
+value = { add = "starship" }
+
+[[variants.noctalia.steps]]
+op = "run"
+argv = ["noctalia", "msg", "templates-apply"]

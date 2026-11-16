@@ -121,6 +121,15 @@ argv=["true"]
         cli.apply(self.ids())
         self.assertEqual(self.runs(), 2)
 
+    def test_apply_run_repo_path_from_another_home(self):
+        repo = self.tmp / "repository with spaces"
+        repo.mkdir()
+        (repo / "record.sh").write_text('printf "%s" "$PWD" > "$1"\n')
+        steps = [{"argv": ["sh", "{repo}/record.sh", str(self.counter)]}]
+        with mock.patch.object(cli, "REPO", repo):
+            self.assertTrue(cli._run_steps(steps, self.home, lambda _: None))
+        self.assertEqual(self.counter.read_text(), str(self.home))
+
     def test_apply_fetches_and_dry_run_does_not(self):
         r = cli.apply(self.ids(), dry_run=True)
         self.assertFalse((fetch.cache_root() / "upstream").exists())

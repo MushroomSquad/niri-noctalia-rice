@@ -1,0 +1,74 @@
+id = "agents"
+title = "Claude Code and Codex agents (GSD)"
+group = "apps"
+default = true
+
+[[steps]]
+op = "copy"
+src = "repo:agents/claude"
+dst = ".claude/agents"
+
+[[steps]]
+op = "copy"
+src = "repo:agents/codex"
+dst = ".codex/agents"
+
+[[steps]]
+op = "replace"
+target = ".codex/agents/gsd-debugger.toml"
+pattern = "@HOME@"
+repl = "$HOME"
+
+[[steps]]
+op = "replace"
+target = ".codex/agents/gsd-executor.toml"
+pattern = "@HOME@"
+repl = "$HOME"
+
+[[steps]]
+op = "replace"
+target = ".codex/agents/gsd-phase-researcher.toml"
+pattern = "@HOME@"
+repl = "$HOME"
+
+[[steps]]
+op = "replace"
+target = ".codex/agents/gsd-plan-checker.toml"
+pattern = "@HOME@"
+repl = "$HOME"
+
+[[steps]]
+op = "replace"
+target = ".codex/agents/gsd-planner.toml"
+pattern = "@HOME@"
+repl = "$HOME"
+
+[[steps]]
+op = "replace"
+target = ".codex/agents/gsd-project-researcher.toml"
+pattern = "@HOME@"
+repl = "$HOME"
+
+[[steps]]
+op = "replace"
+target = ".codex/agents/gsd-research-synthesizer.toml"
+pattern = "@HOME@"
+repl = "$HOME"
+
+[[steps]]
+op = "replace"
+target = ".codex/agents/gsd-roadmapper.toml"
+pattern = "@HOME@"
+repl = "$HOME"
+
+[[steps]]
+op = "replace"
+target = ".codex/agents/gsd-ui-researcher.toml"
+pattern = "@HOME@"
+repl = "$HOME"
+
+[[steps]]
+op = "replace"
+target = ".codex/agents/gsd-verifier.toml"
+pattern = "@HOME@"
+repl = "$HOME"

@@ -11,6 +11,7 @@ config.font = wezterm.font('JetBrainsMono Nerd Font Mono')
 config.font_size = 13
 
 config.enable_wayland = false
+config.enable_kitty_graphics = true
 
 config.window_decorations = 'RESIZE'
 config.window_background_opacity = 0.95

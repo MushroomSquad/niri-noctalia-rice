@@ -5,6 +5,7 @@ Step schema (TOML `[[steps]]`, also `[[off_steps]]` and `[[variants.<n>.steps]]`
   generate    generator=<name>                       (injected callable, see Generator)
   run         argv=[...], when="apply"|"build", src=<lock-id>?, terminal=false
               (build: cwd is a scratch copy of source `src`; "{out}" in argv is the out dir)
+              (apply: "{repo}" in argv is the repository root, independent of cwd)
   replace     target, pattern (regex), repl           ($HOME in repl is substituted)
   drop_lines  target, pattern (regex)
   ini_set     target, section, key, value

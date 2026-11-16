@@ -1,0 +1,17 @@
+id = "yakuake"
+title = "Yakuake Mocha skin"
+group = "terminal"
+default = true
+only_if_installed = "yakuake"
+
+[[steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/yakuake/skins/mocha"
+dst = ".local/share/yakuake/skins/mocha"
+
+[[steps]]
+op = "ini_set"
+target = ".config/yakuakerc"
+section = "Appearance"
+key = "Skin"
+value = "mocha"

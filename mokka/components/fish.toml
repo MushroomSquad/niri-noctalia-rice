@@ -1,0 +1,28 @@
+id = "fish"
+title = "Garuda fish configuration"
+group = "shell"
+default = true
+sources = ["garuda-fish-config", "done"]
+[packages]
+repo = ["fish", "eza", "bat", "starship", "ugrep", "direnv", "fastfetch"]
+
+[[steps]]
+op = "copy"
+src = "garuda-fish-config:config.fish"
+dst = ".config/fish/config.fish"
+
+[[steps]]
+op = "drop_lines"
+target = ".config/fish/config.fish"
+pattern = "^\\s*alias\\s+(?:upd|fixpacman|rmpkg|mirror\\S*|grubup)\\s"
+
+[[steps]]
+op = "replace"
+target = ".config/fish/config.fish"
+pattern = "(?<=')eza\\b"
+repl = "eza --icons --color=always"
+
+[[steps]]
+op = "copy"
+src = "done:done.fish"
+dst = ".config/fish/conf.d/"

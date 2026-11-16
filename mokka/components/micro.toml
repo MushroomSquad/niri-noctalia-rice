@@ -1,0 +1,17 @@
+id = "micro"
+title = "Catppuccin Mocha for micro"
+group = "terminal"
+default = true
+[packages]
+repo = ["micro"]
+
+[[steps]]
+op = "copy"
+src = "catppuccin-micro:themes/catppuccin-mocha.micro"
+dst = ".config/micro/colorschemes/"
+
+[[steps]]
+op = "json_set"
+target = ".config/micro/settings.json"
+key = "colorscheme"
+value = "catppuccin-mocha"

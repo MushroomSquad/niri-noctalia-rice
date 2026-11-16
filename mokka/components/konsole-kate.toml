@@ -1,0 +1,37 @@
+id = "konsole-kate"
+title = "Konsole and Kate themes"
+group = "terminal"
+default = true
+only_if_installed = "konsole or kate"
+
+[[steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/konsole/Mokka.colorscheme"
+dst = ".local/share/konsole/"
+
+[[steps]]
+op = "copy"
+src = "catppuccin-konsole:themes/catppuccin-mocha.colorscheme"
+dst = ".local/share/konsole/"
+
+[[steps]]
+op = "copy"
+src = "garuda-mokka:etc/skel/.local/share/konsole/Garuda.profile"
+dst = ".local/share/konsole/"
+
+[[steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/org.kde.syntax-highlighting/themes/Mokka.theme"
+dst = ".local/share/org.kde.syntax-highlighting/themes/"
+
+[[steps]]
+op = "replace"
+target = ".local/share/konsole/Mokka.colorscheme"
+pattern = "^Opacity=1$"
+repl = "Opacity=0.9"
+
+[[steps]]
+op = "replace"
+target = ".local/share/konsole/catppuccin-mocha.colorscheme"
+pattern = "^Opacity=1$"
+repl = "Opacity=0.9"

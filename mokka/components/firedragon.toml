@@ -1,0 +1,6 @@
+id = "firedragon"
+title = "FireDragon browser"
+group = "apps"
+default = false
+[packages]
+aur = ["firedragon"]

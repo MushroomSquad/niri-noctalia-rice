@@ -1,0 +1,55 @@
+id = "wallpapers"
+title = "Garuda wallpapers"
+group = "wallpapers"
+default = true
+default_variant = "mokka"
+
+[variants.mokka]
+title = "Mokka"
+
+[[variants.mokka.steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/wallpapers/City-Horizon/contents/images/1920x1080.jpg"
+dst = "Pictures/Wallpapers/garuda/City-Horizon.jpg"
+
+[[variants.mokka.steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/wallpapers/Mokka-tree/contents/images/3840x2160.jpg"
+dst = "Pictures/Wallpapers/garuda/Mokka-tree.jpg"
+
+[variants.mokka-default]
+title = "Mokka + default wallpaper"
+
+[[variants.mokka-default.steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/wallpapers/City-Horizon/contents/images/1920x1080.jpg"
+dst = "Pictures/Wallpapers/garuda/City-Horizon.jpg"
+
+[[variants.mokka-default.steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/wallpapers/Mokka-tree/contents/images/3840x2160.jpg"
+dst = "Pictures/Wallpapers/garuda/Mokka-tree.jpg"
+
+[[variants.mokka-default.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "wallpaper.default.path"
+value = "$HOME/Pictures/Wallpapers/garuda/Mokka-tree.jpg"
+
+[variants.full]
+title = "Full Garuda collection"
+
+[[variants.full.steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/wallpapers/City-Horizon/contents/images/1920x1080.jpg"
+dst = "Pictures/Wallpapers/garuda/City-Horizon.jpg"
+
+[[variants.full.steps]]
+op = "copy"
+src = "garuda-mokka:usr/share/wallpapers/Mokka-tree/contents/images/3840x2160.jpg"
+dst = "Pictures/Wallpapers/garuda/Mokka-tree.jpg"
+
+[[variants.full.steps]]
+op = "copy"
+src = "garuda-wallpapers:src/garuda-wallpapers"
+dst = "Pictures/Wallpapers/garuda/"

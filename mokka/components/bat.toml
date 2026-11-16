@@ -1,0 +1,20 @@
+id = "bat"
+title = "Catppuccin Mocha for bat"
+group = "terminal"
+default = true
+[packages]
+repo = ["bat"]
+
+[[steps]]
+op = "copy"
+src = "catppuccin-bat:themes/Catppuccin Mocha.tmTheme"
+dst = ".config/bat/themes/"
+
+[[steps]]
+op = "copy"
+src = "garuda-mokka:etc/skel/.config/bat/config"
+dst = ".config/bat/config"
+
+[[steps]]
+op = "run"
+argv = ["bat", "cache", "--build"]

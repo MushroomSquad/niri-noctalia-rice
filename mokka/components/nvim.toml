@@ -1,0 +1,19 @@
+id = "nvim"
+title = "Neovim + AstroNvim"
+group = "apps"
+default = true
+[packages]
+repo = ["neovim", "git", "ripgrep", "fd", "lazygit", "tree-sitter-cli", "unzip"]
+
+[[steps]]
+op = "copy"
+src = "repo:nvim"
+dst = ".config/nvim"
+
+# lazy.nvim rewrites this lock; the second copy makes it a seed.
+
+[[steps]]
+op = "copy"
+src = "repo:nvim/lazy-lock.json"
+dst = ".config/nvim/lazy-lock.json"
+track = false

@@ -212,7 +212,8 @@ def _run_steps(steps, home, log) -> bool:
     for s in steps:
         log("run: " + " ".join(s["argv"]))
         try:
-            ok &= subprocess.run(s["argv"], cwd=home).returncode == 0
+            argv = [a.replace("{repo}", str(REPO)) for a in s["argv"]]
+            ok &= subprocess.run(argv, cwd=home).returncode == 0
         except OSError as e:
             log(f"run failed: {e}")
             ok = False
