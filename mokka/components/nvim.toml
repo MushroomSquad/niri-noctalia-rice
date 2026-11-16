@@ -17,3 +17,11 @@ op = "copy"
 src = "repo:nvim/lazy-lock.json"
 dst = ".config/nvim/lazy-lock.json"
 track = false
+
+# Noctalia's neovim template regenerates this on every theme change; seed only.
+
+[[steps]]
+op = "copy"
+src = "repo:nvim/lua/matugen.lua"
+dst = ".config/nvim/lua/matugen.lua"
+track = false

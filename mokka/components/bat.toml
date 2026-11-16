@@ -3,19 +3,52 @@ title = "Catppuccin Mocha for bat"
 group = "terminal"
 previews = ["catppuccin-bat:assets/mocha.webp"]
 default = true
+default_variant = "mokka"
 [packages]
 repo = ["bat"]
 
-[[steps]]
+[variants.mokka]
+title = "Mokka"
+
+[[variants.mokka.steps]]
 op = "copy"
 src = "catppuccin-bat:themes/Catppuccin Mocha.tmTheme"
 dst = ".config/bat/themes/"
 
-[[steps]]
+[[variants.mokka.steps]]
 op = "copy"
 src = "garuda-mokka:etc/skel/.config/bat/config"
 dst = ".config/bat/config"
 
-[[steps]]
+[[variants.mokka.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.community_ids"
+value = { remove = "bat" }
+
+[[variants.mokka.steps]]
+op = "noctalia"
+list_remove = "theme.templates.community_ids"
+item = "bat"
+
+[[variants.mokka.steps]]
 op = "run"
 argv = ["bat", "cache", "--build"]
+
+[variants.noctalia]
+title = "Noctalia (live colors)"
+
+[[variants.noctalia.steps]]
+op = "toml_set"
+target = ".config/noctalia/config.toml"
+key = "theme.templates.community_ids"
+value = { add = "bat" }
+
+[[variants.noctalia.steps]]
+op = "noctalia"
+list_add = "theme.templates.community_ids"
+item = "bat"
+
+[[variants.noctalia.steps]]
+op = "run"
+argv = ["noctalia", "msg", "templates-apply"]
