@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Standalone installer: niri + Noctalia (Catppuccin Lavender), wezterm, fish+starship, greetd/ReGreet,
-# wallpapers, Handy (speech-to-text). Arch/CachyOS only. Run as a normal user; sudo is asked when needed.
-# Optional parts are asked interactively; without a TTY or with --yes the defaults [Y/n] are used.
-#   ./install.sh [--only greeter,handy,firedragon,podman] [--print-plan] [--no-mokka] [--gui] [--yes] [--no-pkgs] [--no-greeter] [--no-handy] [--no-wallpapers] [--no-nvim] [--no-agents] [--no-firedragon] [--fish-theme]
-# Re-run anytime to update: ./install.sh update   (= --yes; pulls the repo first; package updates run through cachy-update, interactively)
-# --firedragon is accepted for compatibility (FireDragon is installed by default).
+# Installer for niri + Noctalia with the Garuda Mokka look. Arch/CachyOS only; run as a normal user, sudo is asked.
+# Phase 1: package sets from mokka/packages.toml. Phase 2: python -m rice apply --defaults (appearance).
+# Optional sets are asked interactively; without a TTY or with --yes their defaults are used.
+#   ./install.sh [--yes] [--gui] [--no-pkgs] [--no-mokka] [--no-wallpapers] [--no-<set>|--<set>] [--fish-theme] [--print-plan]
+#   ./install.sh --only greeter,handy,firedragon,podman   # just these steps, no rice
+#   ./install.sh update                                   # = --yes after git pull --ff-only
+# Full flag list: README.md.
 set -euo pipefail
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

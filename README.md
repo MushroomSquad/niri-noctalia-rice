@@ -1,141 +1,254 @@
 # niri-noctalia-rice
 
-Моё оформление CachyOS: **niri + Noctalia**, **wezterm**, **fish + starship**, экран входа **greetd/ReGreet**, обои и компоненты **Garuda Mokka**. Цветами управляет Noctalia; Mokka добавляет темы, шрифты и настройки приложений.
+A desktop setup for **CachyOS / Arch Linux** built on the [niri](https://github.com/YaLTeR/niri) scrolling compositor
+and the [Noctalia](https://github.com/noctalia-dev/noctalia-shell) shell, styled after
+**[Garuda Linux](https://garudalinux.org/) Mokka** (Catppuccin Mocha Mauve).
 
-Перед установкой обнови систему: `sudo pacman -Syu`. Сам установщик ставит пакеты через `pacman -S --needed --noconfirm`, без обновления системы. Нужен обычный пользователь с sudo, Arch/CachyOS; для GUI — Python, PyGObject, GTK4 и libadwaita.
+Noctalia drives the colors. The Garuda Mokka parts (Kvantum theme, fonts, cursor, fish config, Starship prompt,
+Fastfetch, app themes, wallpapers) are fetched from Garuda's own upstream repositories at install time, pinned to the
+versions Garuda ships, and patched to fit niri + Noctalia. Nothing from Garuda is vendored here.
+
+**Includes:** niri · Noctalia · WezTerm · fish + Starship · greetd/ReGreet login screen · Kvantum/qt6ct · GTK
+(adw-gtk3 or Colloid) · AstroNvim · FireDragon · Handy speech-to-text · a GTK4 GUI to manage it all.
+
+## Contents
+
+- [Requirements](#requirements)
+- [Install](#install)
+- [GUI](#gui)
+- [Packages](#packages)
+- [Appearance (Mokka components)](#appearance-mokka-components)
+- [Command line](#command-line)
+- [Your own settings](#your-own-settings)
+- [How rice treats your files](#how-rice-treats-your-files)
+- [Repository layout](#repository-layout)
+- [Notes](#notes)
+- [Troubleshooting](#troubleshooting)
+- [Credits](#credits)
+
+## Requirements
+
+- CachyOS or another Arch-based distro (`pacman`), a normal user with sudo.
+- An up-to-date system: run `sudo pacman -Syu` (or `cachy-update`) first. The installer only runs
+  `pacman -S --needed` and never upgrades the system itself.
+- For the GUI: Python, PyGObject, GTK4 and libadwaita (installed by the `core` package set).
+
+## Install
 
 ```bash
-git clone <repo> && cd niri-noctalia-rice
-./install.sh
-# Или выбрать компоненты в окне:
-./install.sh --gui
+git clone https://github.com/MushroomSquad/niri-noctalia-rice.git
+cd niri-noctalia-rice
+./install.sh          # asks about optional parts
+./install.sh --gui    # or pick packages and components in the GUI
 ```
 
-Необязательные части спрашиваются интерактивно; без TTY или с `--yes` берутся значения по умолчанию из `mokka/packages.toml`. Обои, Neovim, агенты, Mokka и FireDragon (вместо Firefox) включены, тема подсветки fish выключена.
+Keep the checkout where it is: the GUI and its launcher (**niri-noctalia-rice** in the app menu) run from it.
 
-Установка идёт в две фазы. **Фаза 1 (пакеты):** `python -m rice packages install` ставит выбранные наборы из манифеста `mokka/packages.toml`: базовые (`core`, `shell`) всегда, остальные по вопросам. **Фаза 2 (оформление):** `python -m rice apply --defaults --yes` применяет компоненты Mokka. Компонент, которому не хватает пакетов, пропускается с пометкой `needs ...`, а не ставит их сам; поставить нужное можно в GUI или `rice packages install`. `./install.sh --print-plan` — только вопросы и вывод плана (`sets: ...`, `apply: ...`); выходит до sudo и до любых записей файлов.
+The installer has two phases:
 
-`./install.sh update` = `--yes`: сначала `git pull --ff-only` и перезапуск скрипта (с `--only` pull не выполняется), затем обычная установка. Обновления ОС идут через `cachy-update` (запускается интерактивно при наличии TTY; установщик включает его трей-апплет и ежедневную проверку), `pacman -Syu` не используется.
+1. **Packages.** Installs the package sets from [`mokka/packages.toml`](mokka/packages.toml): `core` and `shell`
+   always, the rest as you answer. Without a TTY, or with `--yes`, it uses each set's default.
+2. **Appearance.** Runs `python -m rice apply --defaults --yes` to apply the Mokka components. A component whose
+   packages are missing is skipped with `needs ...`. It never installs packages behind your back.
 
-- `--no-pkgs` — пропустить фазу 1 (нужен уже установленный `python`). `--no-wallpapers` — не копировать обои. Старые флаги работают: `--no-greeter`, `--no-handy`, `--firedragon` / `--no-firedragon` отображаются на наборы `greeter`, `handy`, `firedragon`; `--no-<id>` / `--<id>` подходит для любого набора из `rice packages list`, неизвестный id — ошибка.
-- `--no-mokka` — пропустить финальное применение компонентов. `--gui` — открыть GUI вместо автоматического `apply --defaults` (фаза 1 при этом выполняется как обычно; дальше пакеты и компоненты выбираются в GUI).
-- `--no-nvim` / `--no-agents` передаются в rice как `--without nvim,agents` (или один выбранный компонент). `--nvim` / `--agents` явно включают их через `--with`; `--nvim` / `--no-nvim` действуют и на набор пакетов `nvim`, и на компонент. Neovim с AstroNvim и агенты ставятся рецептами. Плагины AstroNvim подтянутся при первом запуске; агенты GSD требуют отдельной установки `~/.codex/get-shit-done`.
-- `--no-firedragon` — не ставить набор и передать rice `--without firedragon`; по умолчанию ставится `firedragon-catppuccin-bin` (AUR), после чего Firefox удаляется, а Mod+B открывает FireDragon. `--firedragon` оставлен для совместимости. Профиль не переносится. Эти флаги компонентов действуют при автоматическом apply; при `--no-mokka` компоненты не ставятся.
-- `--fish-theme` — сохранить Catppuccin Mocha для подсветки fish. Конфиг fish, prompt Starship и Fastfetch теперь управляются рецептами rice.
-- `--only greeter,handy,firedragon,podman` — выполнить только перечисленные шаги (можно один или несколько). Без вопросов, копирования дерева конфигов, gsettings и любых вызовов rice; его вызывает `rice packages install` для наборов с шагом. **`--only pkgs` удалён**: выход с ошибкой, используй `python -m rice packages install <ids>`.
-- `RICE_NO_RUN=1 ./install.sh ...` — передать финальному `rice apply` флаг `--no-run`: пропустить команды рецептов после записи файлов. Это не отключает обычные действия установщика, установку пакетов или сборку тем. Для `--gui` этот режим не применяется: у GUI нет такого CLI-флага.
+After the first login into niri, run `noctalia msg templates-apply`. Noctalia steps wait in `run_pending` until
+`python -m rice apply --defaults` (or **Apply** in the GUI) runs inside a session with Noctalia running.
 
-Handy скачивается с GitHub (последняя версия или `HANDY_VERSION=0.8.3`), ставится в `~/.local/opt/handy`, симлинк — `~/.local/bin/handy`. Настройки PTT Ctrl+Space и `handy-paste` через wl-copy+wtype кладутся только при первом запуске установщика без существующих настроек Handy; строка автозапуска не дублируется. Модели выбираются в окне Handy, в репозитории их нет.
+To update, run `./install.sh update`. It is the same as `--yes`, but first does `git pull --ff-only` and restarts
+itself. OS updates go through `cachy-update`; the installer enables its tray applet and daily check.
 
-Если установка пакетов упала с 404 или ошибкой базы, база пакетов устарела: выполни `cachy-update` и повтори. При блокировке (`/var/lib/pacman/db.lck`) убедись, что pacman не запущен, затем `sudo rm /var/lib/pacman/db.lck`; те же подсказки rice выводит сам.
+Files the installer overwrites are kept as `*.bak-<timestamp>`.
 
-Перезаписанные установщиком файлы сохраняются как `*.bak-<время>`. После первого входа в niri выполни `noctalia msg templates-apply`. В меню приложений появится **niri-noctalia-rice**: ярлык запускает GUI из каталога репозитория, поэтому оставь checkout на месте.
+<details>
+<summary><b>All installer flags</b></summary>
 
-Для операций Noctalia нужна запущенная Noctalia (Noctalia must be running). При первой установке они остаются в состоянии `run_pending`, пока внутри сессии не выполнится `python -m rice apply --defaults` из каталога репозитория или **Apply** в GUI.
-
-## Компоненты Mokka
-
-| Компоненты | Что меняют |
+| Flag | Effect |
 |---|---|
-| `palette` | палитра Mokka и актуальные шаблоны Noctalia |
-| `qt`, `kde-apps` | Kvantum Mokka, qt6ct и оформление KDE-приложений |
-| `gtk` | Noctalia/adw-gtk3 по умолчанию или Colloid Catppuccin |
-| `fonts`, `cursor`, `niri-look` | Inter + JetBrainsMono Nerd, курсор Mocha Mauve, радиус окон 16 |
-| `fish`, `starship` | Garuda fish; Starship Mokka (по умолчанию), Garuda или живые цвета Noctalia |
-| `fastfetch`, `wallpapers` | Fastfetch Mokka или пресет репозитория; обои Mokka или коллекция Garuda |
-| `konsole-kate`, `bat`, `micro` | темы приложений; настройки применяются с учётом наличия приложения (yakuake удалён) |
-| `nvim`, `agents` | AstroNvim и агенты Claude Code / Codex |
-| `firedragon` | браузер `firedragon-catppuccin-bin`, по умолчанию включён |
+| `--yes` | No questions, use defaults |
+| `--gui` | Run phase 1, then open the GUI instead of `apply --defaults` |
+| `--no-pkgs` | Skip phase 1 (needs `python` already installed) |
+| `--no-mokka` | Skip phase 2 |
+| `--no-wallpapers` | Don't copy wallpapers |
+| `--no-<set>` / `--<set>` | Skip or include any package set from `rice packages list`; an unknown id is an error |
+| `--no-greeter`, `--no-handy`, `--no-firedragon`, `--firedragon` | Old flags, mapped to the sets of the same name |
+| `--no-nvim`, `--no-agents` / `--nvim`, `--agents` | Exclude or include these components (and the `nvim` package set) |
+| `--fish-theme` | Keep Catppuccin Mocha for fish syntax highlighting |
+| `--only greeter,handy,firedragon,podman` | Run only these install steps: no questions, no config copy, no rice. `--only pkgs` was removed, use `python -m rice packages install <ids>` |
+| `--print-plan` | Ask the questions, print `sets: ...` / `apply: ...` and exit before sudo or any file write |
+| `RICE_NO_RUN=1` | Pass `--no-run` to the final `rice apply` (write files, skip recipe commands) |
 
-`apply --defaults` применяет уже включённые компоненты и компоненты по умолчанию, ещё не имеющие записи в состоянии. Выключенные пользователем остаются выключенными; выключение сохраняет текущие настройки, установленные приложения остаются. Рецепты ничего не ставят: они объявляют `needs` (наборы пакетов). Пока набор не установлен, компонент пропускается (`needs ...`); `apply --install-needs` сначала доставит недостающие наборы.
+</details>
 
-## Пакеты
+## GUI
 
-Все пакеты описаны в `mokka/packages.toml`: наборы (`core`, `shell`, `gtk-theme`, `fonts`, `icons`, `qt-theme`, `cursors`, `greeter`, `handy`, `firedragon`, `nvim`, `micro`, `telegram`, `dev` и др.) с группами и списками repo/AUR. Состояние определяется через `pacman -T` (учитывает provides), у наборов с шагом (`greeter`, `handy`, `firedragon`, `dev`) вызывается `install.sh --only <шаг>`.
+```bash
+python -m rice gui
+python -m rice.gui --tab packages   # open on the Packages tab
+```
+
+- **Appearance:** Mokka components as cards with large previews (click to open fullscreen), the palette, variant
+  dropdowns and a state line: *Applied*, *Needs apply*, *Hand-edited*, *Waiting for Noctalia*, *Needs packages*. The
+  header shows how many changes are pending and whether upstream has updates, next to **Apply (N)**. Also: check
+  for updates, show changes (diff), open the custom folder.
+- **Packages:** package sets by group, each *Installed*, *Partially installed* (lists what is missing) or *Not
+  installed*. **Install** and **Remove** open a terminal where sudo is asked; the GUI reads the result when the
+  terminal closes (*Done*, *Failed*, *Cancelled*, *Terminal did not start*).
+
+The terminal is picked in this order: `xdg-terminal-exec`, `$TERMINAL` (not `footclient`), then the first of WezTerm,
+kitty, foot, Alacritty, Konsole.
+
+## Packages
+
+Every package lives in [`mokka/packages.toml`](mokka/packages.toml) as a **set**:
+
+| Group | Sets |
+|---|---|
+| Base | `core`, `shell` |
+| Theme | `gtk-theme`, `fonts`, `icons`, `qt-theme`, `cursors`, `sassc` |
+| Apps | `greeter`, `handy`, `firedragon`, `nvim`, `micro`, `telegram`, `filezilla`, `clash-verge`, `spotify` |
+| Dev | `dev` (Node.js, k9s, rootless Podman) |
+
+State always comes from the live system, so software installed by hand or by an older installer is detected:
+
+- one `pacman -T` call for all sets, which also resolves `provides`;
+- `any_of`: alternatives that satisfy each other (`firedragon` or `firedragon-catppuccin-bin`);
+- `cmds`: a command that counts as the package, for tools installed outside pacman (cargo, `~/.local/bin`);
+- `installed_if`: a command, file or enabled systemd unit (greetd, the Handy AppImage).
+
+Sets with an install step (`greeter`, `handy`, `firedragon`, `dev`) run `install.sh --only <step>` after their
+packages.
 
 ```bash
 python -m rice packages list
 python -m rice packages status
 python -m rice packages install firedragon nvim
-python -m rice packages remove telegram
-python -m rice apply --defaults --install-needs --yes
+python -m rice packages remove telegram       # only optional app sets
 ```
 
-Для установки нужен sudo; `install`/`remove` работают в интерактивном терминале.
+## Appearance (Mokka components)
 
-## Управление
+| Component | What it changes |
+|---|---|
+| `palette` | Mokka palette and Noctalia templates |
+| `qt`, `kde-apps` | Kvantum Mokka, qt6ct, KDE app colors (Dolphin, …) |
+| `gtk` | Noctalia/adw-gtk3 (default) or Colloid Catppuccin |
+| `fonts`, `cursor`, `niri-look` | Inter + JetBrainsMono Nerd Font, Catppuccin Mocha Mauve cursor, 16 px window radius |
+| `fish`, `starship` | Garuda fish config; Starship Mokka (default), Garuda or live Noctalia colors |
+| `fastfetch`, `wallpapers` | Fastfetch Mokka or the repo preset; Mokka or Garuda wallpapers |
+| `konsole-kate`, `bat`, `micro` | App themes, applied only if the app is installed |
+| `nvim`, `agents` | AstroNvim; Claude Code / Codex agents |
 
-Команды запускаются из каталога репозитория. `apply` сам скачивает недостающие закреплённые исходники; после загрузки их можно использовать офлайн. Перед обновлением исходников показывается diff, обновления проверяются по запросу, таймера нет.
+Recipes are declarative TOML files in [`mokka/components/`](mokka/components). They never install packages; they
+declare `needs` (package set ids). `apply --install-needs` installs missing needs first.
+
+`apply --defaults` applies components that are already on, plus default components that have no state yet. A
+component you turned off stays off. Turning one off keeps its current settings and leaves apps installed.
+
+Upstream sources are pinned in [`mokka/upstream.lock.toml`](mokka/upstream.lock.toml) and cached in
+`~/.cache/niri-noctalia-rice/upstream`, so once fetched everything works offline. Updates are checked on demand,
+with a diff shown before anything changes.
+
+## Command line
+
+Run from the repository root:
 
 ```bash
-python -m rice --help
-python -m rice gui
-python -m rice packages status
-python -m rice status
-python -m rice status --remote
-python -m rice apply --defaults --dry-run
+python -m rice status                      # components and their state
+python -m rice status --remote             # also check upstream for updates
+python -m rice apply --defaults --dry-run  # preview changes, no network or builds
 python -m rice apply --defaults --yes
-python -m rice apply --defaults --without nvim,agents --with firedragon --yes
+python -m rice apply --defaults --without nvim,agents --yes
 python -m rice apply gtk --variant gtk=colloid --yes
 python -m rice apply starship --variant starship=noctalia --yes
 python -m rice disable gtk
 python -m rice fetch --defaults
-python -m rice update
-# Перезакрепить исходники отдельно:
-python -m rice lock --latest
-# Или: python -m rice lock --pkgbuilds <commit>
+python -m rice update                      # show upstream diff, rebuild what changed
+python -m rice lock --latest               # re-pin sources
 ```
 
-Отдельной команды build или diff нет: просмотр изменений — `apply --dry-run` (без сети и сборки). Colloid собирается запуском скачанного upstream `install.sh` только при явном выборе этого варианта; приложения libadwaita эту тему игнорируют.
+Colloid is built by running its upstream `install.sh`, only when you choose that variant. libadwaita apps ignore it.
 
-### GUI
+## Your own settings
 
-Две вкладки. **Appearance** — компоненты Mokka в виде карточек с крупными превью, палитрой и строкой состояния (в шапке: сколько изменений ожидает и есть ли обновления upstream; кнопка **Apply (N)**). **Packages** — наборы пакетов по группам (базовые свёрнуты) с состоянием `installed` / `partial` / `missing`. Кнопки **Install** / **Remove** открывают терминал (подпись «Opens a terminal, needs sudo»), где запрашивается sudo; результат читается из файла после закрытия терминала. Терминал выбирается так: `xdg-terminal-exec`, затем `$TERMINAL` (кроме `footclient`), затем первый найденный из wezterm, kitty, foot, alacritty, konsole. Если ничего нет, появляется «No terminal found». Итог показывается уведомлением: Done, Failed: ..., **Cancelled** (терминал закрыт или установка прервана) или **Terminal did not start**.
+Put your changes in **`~/.config/rice-custom/`**. It is never overwritten, backed up or tracked; rice only creates
+missing examples from [`mokka/custom-skel/`](mokka/custom-skel). The GUI button **Open custom folder** opens it.
 
-Noctalia управляет цветами GTK и Qt. Kvantum остаётся Mokka при смене палитры Noctalia. Для логотипа Fastfetch используется kitty graphics, поддержка включена в wezterm.
+| File | Loaded |
+|---|---|
+| `fish/*.fish` | Last, in name order, so they can override Garuda aliases |
+| `niri.kdl` | After `noctalia.kdl`, so it can override keybindings. A typo breaks the whole niri config: check with `niri validate` |
+| `wezterm.lua` | Before `return config`, e.g. `config.font_size = 14` |
+| `gtk3.css`, `gtk4.css` | After the main GTK 3 / GTK 4 styles |
+| `starship.toml` | Replaces the whole prompt via `STARSHIP_CONFIG` (see `starship.toml.example`) |
 
-## Кто владеет файлами
+## How rice treats your files
 
 ```bash
-python -m rice owned
-python -m rice refresh .config/niri/cfg/misc.kdl
+python -m rice owned                               # files rice manages, relative to ~
+python -m rice refresh .config/niri/cfg/misc.kdl   # restore the repo version (with a backup)
 ```
 
-`rice owned` выводит пути относительно домашнего каталога: целые файлы, начальные копии и цели точечных правок. До первого применения список пуст. При повторном запуске `install_tree` сохраняет эти файлы и пишет `kept (owned by rice): <path>`. После выключения компонента пути остаются в списке, чтобы установщик не сбрасывал их.
+- Whole files are tracked by hash. If you edit one by hand, rice keeps your version unless you pass `--force`.
+- Shared configs (`kdeglobals`, `dolphinrc`, `qt6ct.conf`, `kvantum.kvconfig`, `micro/settings.json`, Noctalia
+  `settings.toml`) only get the keys rice needs. Everything else stays yours.
+- Seed files (Neovim `lazy-lock.json`, the Noctalia Starship variant) are copied once and not tracked.
+- Re-running `install.sh` keeps files rice owns (`kept (owned by rice): <path>`).
 
-Rice проверяет хеши целых файлов и сохраняет ручные правки без `--force`; общие конфиги правит точечно, не перезаписывая цвета Noctalia. Начальные копии (например, `lazy-lock.json` Neovim и Starship в варианте Noctalia) не отслеживаются по хешу. `python -m rice refresh <relpath>` возвращает версию из `home/<relpath>` с резервной копией и повторно применяет включённые точечные правки. Команда подходит для файлов, у которых есть копия в `home/`.
+## Repository layout
 
-## Свои настройки
-
-Храни свои дополнения в `~/.config/rice-custom/`: rice и полный `install.sh` создают только отсутствующие примеры из `mokka/custom-skel/`. Существующие файлы не перезаписываются и не копируются в резервные копии; каталог не входит в `rice owned` и не проходит через `install_tree`. `--dry-run` его не создаёт. Кнопка **Open custom folder** в GUI создаёт и открывает этот каталог.
-
-- `fish/*.fish` загружаются по имени в сортированном порядке последними, поэтому могут переопределять alias из Garuda. Например: `alias ls 'echo custom'`.
-- `niri.kdl` подключается после `noctalia.kdl`; здесь можно переопределять привязки клавиш. Опечатка в `rice-custom/niri.kdl` ломает весь конфиг niri: проверяй изменения командой `niri validate`. Если `~/.config/niri` — симлинк, относительный include может молча пропустить этот файл.
-- `wezterm.lua` начинается с `local config = ...`; далее можно менять поля, например `config.font_size = 14`. Файл загружается перед `return config` и добавляется в список наблюдения WezTerm.
-- `gtk3.css` и `gtk4.css` содержат дополнения GTK 3 и GTK 4 после основных стилей. В варианте Colloid подключаются оба файла; держи в них совместимые с нужной версией правила.
-- Необязательный `starship.toml` **заменяет prompt целиком** через `STARSHIP_CONFIG`. По умолчанию есть только незагружаемый `starship.toml.example`; для своей темы создай полный `starship.toml` и открой новый fish.
-
-В `kdeglobals`, `dolphinrc`, `qt6ct.conf`, `kvantum.kvconfig`, `micro/settings.json` и `noctalia/settings.toml` rice меняет только нужные ключи, сохраняя остальные пользовательские настройки.
-
-## Что внутри
-
-| Путь | Назначение |
+| Path | What |
 |---|---|
-| `home/.config/niri` | конфиг niri; `noctalia.kdl` генерирует Noctalia, `cfg/rice.kdl` — rice |
-| `home/.config/noctalia` | базовый конфиг, палитра Catppuccin-Lavender, `plugins.json` |
-| `home/.config/wezterm`, `home/.config/gtk-{3,4}.0` | базовые настройки терминала и GTK |
-| `mokka/custom-skel/` | примеры для личного каталога `~/.config/rice-custom/` |
-| `rice/`, `mokka/components/` | общий движок CLI/GUI и декларативные рецепты |
-| `mokka/files/`, `mokka/upstream.lock.toml` | файлы вариантов и закреплённые upstream-источники |
-| `nvim/`, `agents/` | исходники для рецептов приложений |
-| `wallpapers/`, `handy/`, `etc/greetd/` | обои репозитория, шаблон Handy, greetd/ReGreet |
-| `etc/systemd`, `etc/dracut.conf.d` | таймаут монтирования корня в initrd 120 с (только для dracut) |
+| `install.sh` | Installer: package phase, appearance phase, `--only` steps |
+| `rice/` | Engine, CLI and GUI (Python stdlib + PyGObject) |
+| `mokka/components/` | Declarative recipes, one per component |
+| `mokka/packages.toml` | Package sets |
+| `mokka/upstream.lock.toml` | Pinned upstream sources |
+| `mokka/files/`, `mokka/previews/`, `mokka/custom-skel/` | Variant files, GUI previews, custom-folder examples |
+| `home/` | Base configs: niri, Noctalia, WezTerm, GTK, fish extras |
+| `nvim/`, `agents/` | AstroNvim config, Claude Code / Codex agents |
+| `etc/greetd/` | greetd + ReGreet login screen |
+| `etc/systemd/`, `etc/dracut.conf.d/` | 120 s root mount timeout in the initrd |
+| `wallpapers/`, `handy/` | Repo wallpapers, Handy settings template |
+| `docs/mokka/` | Specs and plans |
+| `tests/` | `python -m unittest discover -s tests` |
 
-Мониторы определяются через `~/.local/bin/niri-autodisplay` при старте niri: родное разрешение, максимальная частота, VRR, масштаб по DPI, слева направо. Убери строку AUTOGEN в `display.kdl`, чтобы зафиксировать вручную; поворот не определяется, пример — `display.kdl.example`. Greeter генерирует outputs по подключённым портам.
+## Notes
 
-- Приложения из лаунчера Noctalia запускаются отдельными systemd-юнитами (`launch_apps_as_systemd_services`): при нехватке памяти systemd-oomd убивает только прожорливое приложение, а не весь шелл.
-- В CachyOS `DefaultTimeoutStartSec=15s` действует и в initrd: после жёсткого выключения btrfs может монтировать корень дольше, и загрузка падает в emergency mode. Установщик даёт `sysroot.mount` 120 с и пересобирает initramfs (`limine-update` или `dracut --regenerate-all`).
-- Polkit-агент встроен в Noctalia (`polkit_agent = true`), `polkit-kde-agent` не ставится и не запускается.
-- Если стоит FireDragon, Mod+B открывает его, а не удалённый Firefox.
+- **Monitors** are set up by `~/.local/bin/niri-autodisplay` when niri starts: native resolution, highest refresh
+  rate, VRR, scale by DPI, left to right. Remove the `AUTOGEN` line in `display.kdl` to pin your own layout
+  (rotation isn't detected; see `display.kdl.example`). The greeter generates outputs from the connected ports.
+- **Apps launched from Noctalia** run as separate systemd units (`launch_apps_as_systemd_services`), so under memory
+  pressure systemd-oomd kills the hungry app, not the whole shell.
+- **Boot:** CachyOS sets `DefaultTimeoutStartSec=15s`, which also applies in the initrd. After a hard power-off,
+  btrfs may need longer to mount root and boot drops to emergency mode. The installer gives `sysroot.mount` 120 s and
+  rebuilds the initramfs (`limine-update` or `dracut --regenerate-all`).
+- **Polkit:** Noctalia's built-in agent is used; `polkit-kde-agent` is not installed.
+- **FireDragon** replaces Firefox (removed after install); Mod+B opens it. Profiles are not migrated.
+- **Handy** is downloaded from GitHub (latest, or `HANDY_VERSION=x.y.z`) into `~/.local/opt/handy`. Ctrl+Space is
+  push-to-talk; pick a speech model in Handy's window on first start.
+- **Fastfetch** shows its logo through the kitty graphics protocol, enabled in WezTerm.
+- **Fingerprint** on the lock screen is enabled but needs `fprintd` and `fprintd-enroll`.
+- Noctalia plugins, `fish_variables`, the old v4 `settings.json`, caches and state are not migrated.
 
-Плагины Noctalia ставятся отдельно; `fish_variables`, старый `settings.json` v4, кэш и состояние не переносятся. Fingerprint в lockscreen включён, но нужен `fprintd` + `fprintd-enroll`.
+## Troubleshooting
+
+- **404 or database errors while installing:** the package database is stale. Run `cachy-update` and try again.
+- **`/var/lib/pacman/db.lck`:** make sure pacman isn't running, then `sudo rm /var/lib/pacman/db.lck`.
+- **Noctalia steps stay pending:** Noctalia must be running; run `python -m rice apply --defaults` inside the session.
+- **Noctalia "Legacy setting" banner:** run `noctalia config validate` and fix the listed keys in
+  `~/.config/noctalia/config.toml`. The repo copy is kept current, but rice doesn't overwrite your live file.
+
+## Credits
+
+- **[Garuda Linux](https://garudalinux.org/)** for the Mokka look this setup is built on:
+  [garuda-mokka](https://gitlab.com/garuda-linux/themes-and-settings/settings/garuda-mokka),
+  [garuda-fish-config and garuda-starship-prompt](https://gitlab.com/garuda-linux/pkgbuilds),
+  [garuda-wallpapers](https://gitlab.com/garuda-linux/themes-and-settings/artwork/garuda-wallpapers).
+  This project is not affiliated with Garuda Linux.
+- [Catppuccin](https://github.com/catppuccin): KDE, Konsole, bat, micro and cursor themes.
+- [niri](https://github.com/YaLTeR/niri), [Noctalia](https://github.com/noctalia-dev/noctalia-shell),
+  [CachyOS](https://cachyos.org/).
+- [Colloid GTK theme](https://github.com/vinceliuice/Colloid-gtk-theme),
+  [done](https://github.com/franciscolourenco/done), [AstroNvim](https://astronvim.com/),
+  [Handy](https://github.com/cjpais/Handy).
+- Repo wallpapers come from [wallhaven](https://wallhaven.cc/).
