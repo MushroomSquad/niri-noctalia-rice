@@ -224,6 +224,8 @@ install_tree() { # install_tree <srcdir> <dstdir>
   done < <(cd "$1" && find . -type f -print0)
 }
 install_tree "$SRC/home" "$HOME"
+# ~/.wezterm.lua is read before ~/.config/wezterm/wezterm.lua and would shadow ours
+if [[ -e $HOME/.wezterm.lua ]]; then mv "$HOME/.wezterm.lua" "$HOME/.wezterm.lua.bak-$TS"; fi
 (cd "$SRC" && python -c 'from pathlib import Path; from rice.cli import _seed_custom; _seed_custom(Path.home())')
 sed -i "s|@HOME@|$HOME|g" "$CFG/noctalia/config.toml"
 if (( OPT[wallpapers] == 0 )); then
