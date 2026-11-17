@@ -1,6 +1,7 @@
 """GTK4/libadwaita front-end: a thin layer over rice/cli.py and rice/packages.py (PLAN-2 §4)."""
 import json
 import os
+import signal
 import subprocess
 import sys
 import tempfile
@@ -712,6 +713,7 @@ def main(argv=None):
         print("gui: no display available, skipping", file=sys.stderr)
         return 0 if smoke else 1
     app = App(smoke, tab)
+    signal.signal(signal.SIGINT, signal.SIG_DFL)  # Ctrl+C in the terminal closes the window without a traceback
     app.run([])
     return app.code
 
