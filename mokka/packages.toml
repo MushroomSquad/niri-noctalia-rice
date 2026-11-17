@@ -83,7 +83,7 @@ default = true
 repo = ["fuse2", "wtype", "xdotool"]
 aur = []
 step = "handy"
-installed_if = { file = "~/.local/opt/handy/Handy.AppImage" }
+installed_if = { file = ["~/.local/opt/handy/Handy.AppImage", "~/.config/autostart/Handy.desktop"] }
 
 [[set]]
 id = "firedragon"
@@ -103,6 +103,7 @@ group = "apps"
 default = true
 repo = ["neovim", "git", "ripgrep", "fd", "lazygit", "tree-sitter-cli", "unzip"]
 aur = []
+cmds = { tree-sitter-cli = "tree-sitter" }
 removable = true
 
 [[set]]
@@ -121,6 +122,7 @@ group = "apps"
 default = true
 repo = ["telegram-desktop"]
 aur = ["tg-ws-proxy-bin"]
+cmds = { tg-ws-proxy-bin = "tg-ws-proxy" }
 removable = true
 
 [[set]]
@@ -156,7 +158,7 @@ id = "dev"
 title = "Development and rootless containers"
 group = "dev"
 default = true
-repo = ["nodejs", "npm", "openssh", "k9s", "podman", "podman-compose", "slirp4netns", "fuse-overlayfs"]
+repo = ["nodejs", "npm", "openssh", "k9s", "podman", "podman-compose", "passt", "fuse-overlayfs"]
 aur = []
 step = "podman"
 step_always = true

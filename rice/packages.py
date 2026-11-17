@@ -32,6 +32,7 @@ class PkgSet:
     any_of: list[list[str]] = field(default_factory=list)
     step: str | None = None
     installed_if: dict = field(default_factory=dict)
+    cmds: dict = field(default_factory=dict)  # package -> command that also satisfies it (cargo, ~/.local/bin)
     removable: bool = False
     step_always: bool = False
 
@@ -97,8 +98,13 @@ def load(path=None) -> list[PkgSet]:
         for key, value in checks.items():
             if key not in ("cmd", "file", "unit"):
                 error(f"installed_if.{key}", "unknown check")
-            if not isinstance(value, str) or not value:
-                error(f"installed_if.{key}", "expected nonempty string")
+            if isinstance(value, str):
+                value = checks[key] = [value]
+            if not isinstance(value, list) or not value or any(not isinstance(x, str) or not x for x in value):
+                error(f"installed_if.{key}", "expected nonempty string or array of strings")
+        cmds = row.get("cmds", {})
+        if not isinstance(cmds, dict) or any(not isinstance(v, str) or not v for v in cmds.values()):
+            error("cmds", "expected table of package = command")
         if row.get("removable") and (row["group"] not in ("apps", "dev") or row.get("step")):
             error("removable", "only apps/dev sets without a step may be removed")
         if row.get("step_always") and not row.get("step"):
@@ -128,10 +134,27 @@ def unsatisfied(names: Iterable[str]) -> set[str] | None:
     raise RuntimeError(f"pacman -T exited {p.returncode}: {p.stderr.strip()}")
 
 
+def _which(cmd):
+    extra = [str(Path(d).expanduser()) for d in ("~/.local/bin", "~/.cargo/bin")]
+    return shutil.which(cmd, path=os.pathsep.join([os.environ.get("PATH", ""), *extra])) is not None
+
+
 def _present(s, name, unsat):
     return unsat is None or name not in unsat or any(
         name in group and any(n not in unsat for n in group) for group in s.any_of
-    )
+    ) or (name in s.cmds and _which(s.cmds[name]))
+
+
+def _check(kind, value):
+    if kind == "cmd":
+        return _which(value)
+    if kind == "file":
+        return Path(value).expanduser().exists()
+    try:
+        return subprocess.run(["systemctl", "is-enabled", value],
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+    except FileNotFoundError:
+        return False
 
 
 def status(sets=None, unsat=_COMPUTED) -> dict[str, SetStatus]:
@@ -143,19 +166,10 @@ def status(sets=None, unsat=_COMPUTED) -> dict[str, SetStatus]:
         names = _unique(s.repo + s.aur)
         missing = [n for n in names if not _present(s, n, unsat)]
         checks = []
-        for kind, value in s.installed_if.items():
-            if kind == "cmd":
-                ok = shutil.which(value) is not None
-            elif kind == "file":
-                ok = Path(value).expanduser().exists()
-            else:
-                try:
-                    ok = subprocess.run(["systemctl", "is-enabled", value],
-                                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
-                except FileNotFoundError:
-                    ok = False
-            if not ok:
-                checks.append(f"{kind}:{value}")
+        for kind, values in s.installed_if.items():
+            values = [values] if isinstance(values, str) else values
+            if not any(_check(kind, v) for v in values):
+                checks.append(f"{kind}:{values[0]}")
         state = ("missing" if checks else "installed" if not missing else
                  "partial" if len(missing) < len(names) else "missing")
         result[s.id] = SetStatus(state, missing + checks)

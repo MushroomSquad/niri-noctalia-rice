@@ -184,6 +184,17 @@ class PackageTests(unittest.TestCase):
         os.environ['PKG_UNIT_RC'] = '0'
         self.assertEqual(p.status([s], unsat=set())['checks'].state, 'installed')
         self.assertIn(['systemctl', 'is-enabled', 'test.service'], self.calls('systemctl'))
+        alt = p.PkgSet('alt', 'Alt', installed_if={'file': ['/nonexistent', str(app)]})
+        self.assertEqual(p.status([alt], unsat=set())['alt'].state, 'installed')
+
+    def test_cmds_satisfy_package_outside_pacman(self):
+        s = p.PkgSet('ts', 'TS', repo=['tree-sitter-cli', 'x'], cmds={'tree-sitter-cli': 'tree-sitter'})
+        bin_ = self.root / '.cargo/bin'
+        bin_.mkdir(parents=True)
+        self.assertEqual(p.status([s], unsat={'tree-sitter-cli', 'x'})['ts'].missing, ['tree-sitter-cli', 'x'])
+        (bin_ / 'tree-sitter').write_text('#!/bin/sh\n')
+        (bin_ / 'tree-sitter').chmod(0o755)
+        self.assertEqual(p.status([s], unsat={'tree-sitter-cli', 'x'})['ts'].missing, ['x'])
 
     def test_install_only_missing_and_inherited_tty(self):
         self.manifest_for('[[set]]\nid="one"\ntitle="One"\ngroup="apps"\nrepo=["present","missing"]\naur=["aur"]\n')
@@ -411,7 +422,7 @@ class ManifestTests(unittest.TestCase):
             'filezilla': ('apps', True, 'filezilla', ''),
             'clash-verge': ('apps', True, '', 'clash-verge-rev-bin'),
             'spotify': ('apps', True, '', 'spotify-launcher'),
-            'dev': ('dev', True, 'nodejs npm openssh k9s podman podman-compose slirp4netns fuse-overlayfs', ''),
+            'dev': ('dev', True, 'nodejs npm openssh k9s podman podman-compose passt fuse-overlayfs', ''),
         }
         self.assertEqual([s.id for s in sets], list(expected))
         for s in sets:
@@ -425,7 +436,10 @@ class ManifestTests(unittest.TestCase):
         self.assertEqual({s.id: s.step for s in sets if s.step}, {
             'greeter': 'greeter', 'handy': 'handy', 'firedragon': 'firedragon', 'dev': 'podman'})
         self.assertEqual({s.id: s.installed_if for s in sets if s.installed_if}, {
-            'greeter': {'unit': 'greetd.service'}, 'handy': {'file': '~/.local/opt/handy/Handy.AppImage'}})
+            'greeter': {'unit': ['greetd.service']},
+            'handy': {'file': ['~/.local/opt/handy/Handy.AppImage', '~/.config/autostart/Handy.desktop']}})
+        self.assertEqual({s.id: s.cmds for s in sets if s.cmds}, {
+            'nvim': {'tree-sitter-cli': 'tree-sitter'}, 'telegram': {'tg-ws-proxy-bin': 'tg-ws-proxy'}})
 
     def test_current_recipe_and_installer_packages_are_covered(self):
         names = {n for s in p.load() for n in s.repo + s.aur}
@@ -441,7 +455,7 @@ class ManifestTests(unittest.TestCase):
         former = '''python git niri noctalia cachyos-niri-noctalia wezterm fish fisher starship eza bat fastfetch ugrep direnv
         adw-gtk-theme inter-font catppuccin-gtk-theme-mocha ttf-jetbrains-mono-nerd adwaita-fonts noto-fonts noto-fonts-emoji
         xwayland-satellite xdg-desktop-portal-gnome xdg-desktop-portal-gtk gnome-keyring wl-clipboard curl nodejs npm
-        base-devel telegram-desktop filezilla openssh k9s podman podman-compose slirp4netns fuse-overlayfs
+        base-devel telegram-desktop filezilla openssh k9s podman podman-compose passt fuse-overlayfs
         greetd greetd-regreet plymouth fuse2 wtype xdotool tela-circle-icon-theme-dracula clash-verge-rev-bin tg-ws-proxy-bin spotify-launcher'''
         self.assertFalse(set(former.split()) - names)
 

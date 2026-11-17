@@ -35,7 +35,7 @@ class RecipesData(unittest.TestCase):
         former = """python git niri noctalia cachyos-niri-noctalia wezterm fish fisher starship eza bat fastfetch ugrep
         direnv adw-gtk-theme inter-font catppuccin-gtk-theme-mocha ttf-jetbrains-mono-nerd adwaita-fonts noto-fonts
         noto-fonts-emoji xwayland-satellite xdg-desktop-portal-gnome xdg-desktop-portal-gtk gnome-keyring wl-clipboard
-        curl nodejs npm base-devel telegram-desktop filezilla openssh k9s podman podman-compose slirp4netns
+        curl nodejs npm base-devel telegram-desktop filezilla openssh k9s podman podman-compose passt
         fuse-overlayfs greetd greetd-regreet plymouth fuse2 wtype xdotool tela-circle-icon-theme-dracula
         clash-verge-rev-bin tg-ws-proxy-bin spotify-launcher firedragon-catppuccin-bin kvantum qt6ct-kde
         catppuccin-cursors-mocha sassc neovim ripgrep fd lazygit tree-sitter-cli unzip micro""".split()
