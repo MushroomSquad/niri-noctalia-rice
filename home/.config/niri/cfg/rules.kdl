@@ -10,6 +10,16 @@
         open-floating true
     }
 
+    // Handy recording pill: transparent 256x200 window, keep it bottom-center without niri's border fill
+    window-rule {
+        match app-id="Handy" title="^Recording$"
+        default-floating-position x=0 y=24 relative-to="bottom"
+        focus-ring { off; }
+        border { off; }
+        shadow { off; }
+        draw-border-with-background false
+    }
+
     layer-rule {
         match namespace="^noctalia-wallpaper*"
         place-within-backdrop true
