@@ -8,6 +8,8 @@ Noctalia drives the colors. The Garuda Mokka parts (Kvantum theme, fonts, cursor
 Fastfetch, app themes, wallpapers) are fetched from Garuda's own upstream repositories at install time, pinned to the
 versions Garuda ships, and patched to fit niri + Noctalia. Nothing from Garuda is vendored here.
 
+![The rice GUI: Mokka components with previews](docs/img/screenshot.png)
+
 **Includes:** niri · Noctalia · WezTerm · fish + Starship · greetd/ReGreet login screen · Kvantum/qt6ct · GTK
 (adw-gtk3 or Colloid) · AstroNvim · FireDragon · Handy speech-to-text · a GTK4 GUI to manage it all.
 
@@ -252,3 +254,8 @@ python -m rice refresh .config/niri/cfg/misc.kdl   # restore the repo version (w
   [done](https://github.com/franciscolourenco/done), [AstroNvim](https://astronvim.com/),
   [Handy](https://github.com/cjpais/Handy).
 - Repo wallpapers come from [wallhaven](https://wallhaven.cc/).
+
+## License
+
+[MIT](LICENSE) for the code and configs in this repository. Upstream themes, wallpapers and configs fetched at
+install time keep their own licenses.
